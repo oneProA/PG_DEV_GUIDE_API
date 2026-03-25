@@ -1,10 +1,40 @@
-.gradle
-build
-bin
-.idea
+### Gradle ###
+.gradle/
+build/
+bin/
+out/
+!gradle/wrapper/gradle-wrapper.jar
+
+### IDE ###
+.idea/
+*.iml
+*.iws
+*.ipr
+.vscode/
+.project
+.classpath
+.settings/
+.nbworkspace
+.factorypath
+
+### Java/Spring ###
+*.class
+*.jar
+*.war
+*.ear
 *.log
 *.swp
-*.class
 .DS_Store
-out
+*.zip
+*.tar.gz
+*.tar
+
+### Environment & Secrets ###
+.env
+.env.local
 gradle.properties
+
+### AI Relay Runtime & Logs ###
+.codex-runtime/
+conversation_log.md
+MISSION_REPORT.md
