@@ -1,0 +1,10 @@
+.gradle
+build
+bin
+.idea
+*.log
+*.swp
+*.class
+.DS_Store
+out
+gradle.properties
