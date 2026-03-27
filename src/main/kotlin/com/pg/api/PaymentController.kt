@@ -30,12 +30,12 @@ class PaymentController {
         return CancelResponse(
             status = "SUCCESS",
             data = CancelData(
-                cancel_id = "CXL_" + (1000000..9999999).random(),
-                payment_id = request.payment_id,
-                cancelled_amount = request.cancel_amount,
-                remained_amount = 12500, // Mock value
+                cancelId = "CXL_" + (1000000..9999999).random(),
+                paymentId = request.paymentId,
+                cancelledAmount = request.cancelAmount ?: 0.toBigDecimal(),
+                remainedAmount = 12500.toBigDecimal(), // Mock value
                 status = "PARTIAL_CANCELLED",
-                created_at = LocalDateTime.now().format(formatter) + "Z"
+                createdAt = LocalDateTime.now().format(formatter) + "Z"
             )
         )
     }

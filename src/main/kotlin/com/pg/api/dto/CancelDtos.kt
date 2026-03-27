@@ -1,9 +1,11 @@
 package com.pg.api.dto
 
+import java.math.BigDecimal
+
 data class CancelRequest(
-    val payment_id: String,
-    val cancel_amount: Long,
-    val cancel_reason: String? = null
+    val paymentId: String,
+    val cancelAmount: BigDecimal? = null,
+    val cancelReason: String? = null
 )
 
 data class CancelResponse(
@@ -12,10 +14,10 @@ data class CancelResponse(
 )
 
 data class CancelData(
-    val cancel_id: String,
-    val payment_id: String,
-    val cancelled_amount: Long,
-    val remained_amount: Long,
+    val cancelId: String,
+    val paymentId: String,
+    val cancelledAmount: BigDecimal,
+    val remainedAmount: BigDecimal,
     val status: String,
-    val created_at: String
+    val createdAt: String
 )

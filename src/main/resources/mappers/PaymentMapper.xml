@@ -1,0 +1,75 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.pg.api.repository.PaymentMapper">
+
+    <resultMap id="paymentResultMap" type="com.pg.api.domain.Payment">
+        <id property="id" column="id"/>
+        <result property="paymentId" column="payment_id"/>
+        <result property="tid" column="tid"/>
+        <result property="mid" column="mid"/>
+        <result property="orderId" column="order_id"/>
+        <result property="amount" column="amount"/>
+        <result property="status" column="status"/>
+        <result property="paymentMethod" column="payment_method"/>
+        <result property="goodsName" column="goods_name"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="approvedAt" column="approved_at"/>
+        
+        <!-- 1:1 관계 (카드 상세) -->
+        <association property="cardDetail" javaType="com.pg.api.domain.CardDetail">
+            <id property="paymentId" column="id"/>
+            <result property="issuer" column="issuer"/>
+            <result property="cardNumber" column="card_number"/>
+            <result property="installmentMonth" column="installment_month"/>
+        </association>
+        
+        <!-- 1:N 관계 (취소 내역) -->
+        <collection property="cancellations" ofType="com.pg.api.domain.Cancellation">
+            <id property="id" column="cancel_id_pk"/>
+            <result property="cancelId" column="cancel_id"/>
+            <result property="paymentId" column="id"/>
+            <result property="cancelAmount" column="cancel_amount"/>
+            <result property="remainedAmount" column="remained_amount"/>
+            <result property="cancelReason" column="cancel_reason"/>
+            <result property="cancelledAt" column="cancelled_at"/>
+        </collection>
+    </resultMap>
+
+    <insert id="insertPayment" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO payments (payment_id, tid, mid, order_id, amount, status, payment_method, goods_name, created_at, approved_at)
+        VALUES (#{paymentId}, #{tid}, #{mid}, #{orderId}, #{amount}, #{status}, #{paymentMethod}, #{goodsName}, #{createdAt}, #{approvedAt})
+    </insert>
+
+    <insert id="insertCardDetail">
+        INSERT INTO payment_card_details (payment_id, issuer, card_number, installment_month)
+        VALUES (#{paymentId}, #{issuer}, #{cardNumber}, #{installmentMonth})
+    </insert>
+
+    <insert id="insertCancellation" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO cancellations (cancel_id, payment_id, cancel_amount, remained_amount, cancel_reason, cancelled_at)
+        VALUES (#{cancelId}, #{paymentId}, #{cancelAmount}, #{remainedAmount}, #{cancelReason}, #{cancelledAt})
+    </insert>
+
+    <select id="findByPaymentId" resultMap="paymentResultMap">
+        SELECT p.*, cd.issuer, cd.card_number, cd.installment_month,
+               c.id as cancel_id_pk, c.cancel_id, c.cancel_amount, c.remained_amount, c.cancel_reason, c.cancelled_at
+        FROM payments p
+        LEFT JOIN payment_card_details cd ON p.id = cd.payment_id
+        LEFT JOIN cancellations c ON p.id = c.payment_id
+        WHERE p.payment_id = #{paymentId}
+    </select>
+
+    <select id="findByTid" resultMap="paymentResultMap">
+        SELECT p.*, cd.issuer, cd.card_number, cd.installment_month,
+               c.id as cancel_id_pk, c.cancel_id, c.cancel_amount, c.remained_amount, c.cancel_reason, c.cancelled_at
+        FROM payments p
+        LEFT JOIN payment_card_details cd ON p.id = cd.payment_id
+        LEFT JOIN cancellations c ON p.id = c.payment_id
+        WHERE p.tid = #{tid}
+    </select>
+
+    <update id="updateStatus">
+        UPDATE payments SET status = #{status} WHERE payment_id = #{paymentId}
+    </update>
+
+</mapper>
