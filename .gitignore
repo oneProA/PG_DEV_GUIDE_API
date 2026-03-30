@@ -34,7 +34,16 @@ out/
 .env.local
 gradle.properties
 
-### AI Relay Runtime & Logs ###
-.codex-runtime/
-conversation_log.md
+### AI Relay & Handoff ###
+GEMINI_CODEX_HANDOFF.md
+Codex_gemini_handoff.md
+MISSION.md
 MISSION_REPORT.md
+CODEX_RELAY_REPORT.md
+UNIT_TEST_REPORT.md
+conversation_log.md
+.codex-runtime/
+
+### Test Artifacts ###
+test-results/
+playwright-report/
