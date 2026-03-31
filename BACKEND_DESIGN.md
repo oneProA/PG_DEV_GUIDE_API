@@ -53,3 +53,7 @@
 - `pgdev` 스키마를 항상 명시하거나 설정에서 기본 스키마로 사용하십시오.
 - `INSERT` 시 PostgreSQL의 `RETURNING` 문법을 활용할 수 있습니다.
 - 모든 시간 데이터는 `TIMESTAMP` 타입을 기준으로 처리하십시오.
+### Auth Flow
+- `AuthService` uses `users.username` with `PasswordEncoder.matches`, then `JwtTokenProvider` issues HS256 tokens (subject/role/userId) based on `security.jwt` props.
+- `AuthController.POST /auth/login` returns `LoginResponse(accessToken, tokenType, expiresAt, username, role)` inside the shared `ApiResponse` schema.
+- `DataInitializer` seeds `demo.user`/`password` to make login flows reproducible.

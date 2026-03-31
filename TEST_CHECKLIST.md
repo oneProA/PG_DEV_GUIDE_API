@@ -11,7 +11,7 @@
 
 | 영역 | 시나리오 | 상태 | 근거(현재 코드) | 다음 단계 |
 |---|---|---|---|---|
-| Auth | `POST /auth/login` | NOT IMPLEMENTED | 컨트롤러/서비스 없음 | User 테이블 + UserMapper + JWT 발급/검증 구현 |
+| Auth | `POST /auth/login` | PASS | `demo.user/password` 로그인 + 발급된 `accessToken` 검증 | User 테이블 + UserMapper + JWT 발급/검증 구현 및 초기 사용자 시드 |
 | Payments | `POST /v2/payments/request` | PARTIAL | `PaymentController.kt`가 mock 응답 반환(DB 미연동) | PaymentMapper 작성 + insert/update/status 반영 |
 | Cancels | `POST /v1/payments/cancel` | PARTIAL | `PaymentController.kt`가 mock 응답 반환(DB 미연동) | CancelMapper + payments 상태/잔액 트랜잭션 처리 |
 | Status | `GET /v1/payments/status/{tid}` | PARTIAL | `PaymentController.kt`가 고정 값 반환(DB 미연동) | tid/mid 기반 조회 + 상태/카드/영수증 정보 DB 연동 |

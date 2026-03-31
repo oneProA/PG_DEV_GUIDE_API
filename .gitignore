@@ -47,3 +47,6 @@ conversation_log.md
 ### Test Artifacts ###
 test-results/
 playwright-report/
+src/main/resources/schema.sql
+src/main/resources/schema.sql
+src/main/resources/schema.sql

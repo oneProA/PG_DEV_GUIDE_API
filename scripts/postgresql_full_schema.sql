@@ -1,10 +1,5 @@
--- 테이블 초기화 (필요 시)
-DROP TABLE IF EXISTS payment_card_details CASCADE;
-DROP TABLE IF EXISTS cancellations CASCADE;
-DROP TABLE IF EXISTS payments CASCADE;
-DROP TABLE IF EXISTS users CASCADE;
+SET search_path TO pgdev;
 
--- 결제 마스터 테이블
 CREATE TABLE IF NOT EXISTS payments (
     id BIGSERIAL PRIMARY KEY,
     payment_id VARCHAR(50) UNIQUE NOT NULL,
@@ -20,7 +15,6 @@ CREATE TABLE IF NOT EXISTS payments (
     CONSTRAINT chk_payments_amount_nonnegative CHECK (amount >= 0)
 );
 
--- 카드 결제 상세 테이블
 CREATE TABLE IF NOT EXISTS payment_card_details (
     payment_id BIGINT PRIMARY KEY REFERENCES payments(id),
     issuer VARCHAR(50),
@@ -29,7 +23,6 @@ CREATE TABLE IF NOT EXISTS payment_card_details (
     CONSTRAINT chk_payment_card_details_installment_month_nonnegative CHECK (installment_month >= 0)
 );
 
--- 취소 내역 테이블
 CREATE TABLE IF NOT EXISTS cancellations (
     id BIGSERIAL PRIMARY KEY,
     cancel_id VARCHAR(50) UNIQUE NOT NULL,
@@ -42,11 +35,15 @@ CREATE TABLE IF NOT EXISTS cancellations (
     CONSTRAINT chk_cancellations_remained_amount_nonnegative CHECK (remained_amount >= 0)
 );
 
-CREATE INDEX IF NOT EXISTS idx_payments_tid ON payments(tid);
-CREATE INDEX IF NOT EXISTS idx_payments_order_id ON payments(order_id);
-CREATE INDEX IF NOT EXISTS idx_cancellations_payment_id ON cancellations(payment_id);
+CREATE INDEX IF NOT EXISTS idx_payments_tid
+    ON payments(tid);
 
--- 사용자 정보
+CREATE INDEX IF NOT EXISTS idx_payments_order_id
+    ON payments(order_id);
+
+CREATE INDEX IF NOT EXISTS idx_cancellations_payment_id
+    ON cancellations(payment_id);
+
 CREATE TABLE IF NOT EXISTS users (
     user_id BIGSERIAL PRIMARY KEY,
     username VARCHAR(50) UNIQUE NOT NULL,
@@ -56,4 +53,5 @@ CREATE TABLE IF NOT EXISTS users (
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE INDEX IF NOT EXISTS idx_users_username ON users(username);
+CREATE INDEX IF NOT EXISTS idx_users_username
+    ON users(username);
