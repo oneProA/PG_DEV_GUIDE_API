@@ -25,7 +25,7 @@ class JwtTokenProvider(private val properties: JwtProperties) {
             .setIssuedAt(Date.from(now))
             .setExpiration(Date.from(expiresAt))
             .claim("role", user.role)
-            .claim("userId", user.userId)
+            .claim("userId", user.username)
             .signWith(key)
             .compact()
 

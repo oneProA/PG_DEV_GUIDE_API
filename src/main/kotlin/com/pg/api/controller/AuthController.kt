@@ -19,14 +19,14 @@ class AuthController(private val authService: AuthService) {
         } catch (e: IllegalArgumentException) {
             println("Auth Error: ${e.message}")
             ResponseEntity.status(401).body(LoginResponse(
-                data = LoginResponseData(accessToken = "", username = "", role = ""),
+                data = LoginResponseData(accessToken = "", username = "", email = "", role = ""),
                 message = e.message
             ))
         } catch (e: Exception) {
             println("Server Error during login: ${e.message}")
             e.printStackTrace()
             ResponseEntity.status(500).body(LoginResponse(
-                data = LoginResponseData(accessToken = "", username = "", role = ""),
+                data = LoginResponseData(accessToken = "", username = "", email = "", role = ""),
                 message = "서버 오류가 발생했습니다."
             ))
         }
