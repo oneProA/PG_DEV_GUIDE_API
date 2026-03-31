@@ -10,6 +10,10 @@ spring:
     url: jdbc:postgresql://ep-bitter-sun-a44cor85.us-east-1.aws.neon.tech:5432/verceldb?currentSchema=pgdev&sslmode=require
     username: default
     password: 1zGNCST4qeBh
+  sql:
+    init:
+      mode: always
+      schema-locations: classpath:schema.sql
 
 mybatis:
   mapper-locations: classpath*:mappers/**/*.xml

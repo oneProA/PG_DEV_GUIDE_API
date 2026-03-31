@@ -1,4 +1,10 @@
-﻿-- 결제 마스터 테이블
+-- 테이블 초기화 (필요 시)
+DROP TABLE IF EXISTS payment_card_details CASCADE;
+DROP TABLE IF EXISTS cancellations CASCADE;
+DROP TABLE IF EXISTS payments CASCADE;
+DROP TABLE IF EXISTS users CASCADE;
+
+-- 결제 마스터 테이블
 CREATE TABLE IF NOT EXISTS payments (
     id BIGSERIAL PRIMARY KEY,
     payment_id VARCHAR(50) UNIQUE NOT NULL,
