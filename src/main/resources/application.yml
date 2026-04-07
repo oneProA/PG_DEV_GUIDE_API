@@ -17,7 +17,7 @@ spring:
     password: 1zGNCST4qeBh
   sql:
     init:
-      mode: always
+      mode: never
       encoding: UTF-8
       schema-locations: classpath:schema.sql
 
