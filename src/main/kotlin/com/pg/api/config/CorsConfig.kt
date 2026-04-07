@@ -11,7 +11,8 @@ class CorsConfig : WebMvcConfigurer {
             .allowedOrigins(
                 "http://localhost:5173",
                 "https://pg-dev-guide-view.vercel.app",
-                "https://pg-dev-guide-view.vercel.app/"
+                "https://pg-dev-guide-view.vercel.app/",
+                "https://pg-dev-guide-view-six.vercel.app"
             )
             .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
             .allowedHeaders("*")

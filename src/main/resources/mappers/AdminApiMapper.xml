@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.pg.api.repository.AdminApiMapper">
+    <resultMap id="apiEndpointResultMap" type="com.pg.api.domain.ApiEndpoint">
+        <id property="id" column="id"/>
+        <result property="name" column="name"/>
+        <result property="httpMethod" column="http_method"/>
+        <result property="endpoint" column="endpoint"/>
+        <result property="version" column="version"/>
+        <result property="status" column="status"/>
+        <result property="description" column="description"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+    </resultMap>
+
+    <resultMap id="apiEndpointFieldResultMap" type="com.pg.api.domain.ApiEndpointField">
+        <id property="id" column="id"/>
+        <result property="fieldScope" column="field_scope"/>
+        <result property="fieldLocation" column="field_location"/>
+        <result property="fieldName" column="field_name"/>
+        <result property="fieldType" column="field_type"/>
+        <result property="requiredYn" column="required_yn"/>
+        <result property="fieldOrder" column="field_order"/>
+        <result property="description" column="description"/>
+        <result property="sampleValue" column="sample_value"/>
+        <result property="defaultValue" column="default_value"/>
+    </resultMap>
+
+    <select id="findAll" resultMap="apiEndpointResultMap">
+        SELECT id, name, http_method, endpoint, version, status, description, created_at, updated_at
+        FROM pgdev.api_endpoints
+        ORDER BY created_at DESC
+    </select>
+
+    <select id="findById" parameterType="long" resultMap="apiEndpointResultMap">
+        SELECT id, name, http_method, endpoint, version, status, description, created_at, updated_at
+        FROM pgdev.api_endpoints
+        WHERE id = #{id}
+    </select>
+
+    <select id="findByEndpoint" parameterType="string" resultMap="apiEndpointResultMap">
+        SELECT id, name, http_method, endpoint, version, status, description, created_at, updated_at
+        FROM pgdev.api_endpoints
+        WHERE endpoint = #{endpoint}
+    </select>
+
+    <select id="findFieldsByApiNameAndVersion" resultMap="apiEndpointFieldResultMap">
+        SELECT f.id,
+               f.field_scope,
+               f.field_location,
+               f.field_name,
+               f.field_type,
+               f.required_yn,
+               f.field_order,
+               f.description,
+               f.sample_value,
+               f.default_value
+        FROM pgdev.api_endpoint_fields f
+        JOIN pgdev.api_endpoint_versions v ON v.id = f.api_version_id
+        JOIN pgdev.api_definitions d ON d.id = v.api_definition_id
+        WHERE d.api_name = #{apiName}
+          AND v.version = #{version}
+        ORDER BY
+            CASE f.field_scope
+                WHEN 'REQUEST' THEN 1
+                WHEN 'RESPONSE' THEN 2
+                ELSE 3
+            END,
+            f.field_order ASC
+    </select>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO pgdev.api_endpoints (name, http_method, endpoint, version, status, description, created_at, updated_at)
+        VALUES (#{name}, #{httpMethod}, #{endpoint}, #{version}, #{status}, #{description}, #{createdAt}, #{updatedAt})
+    </insert>
+
+    <update id="update">
+        UPDATE pgdev.api_endpoints
+        SET name = #{name}, http_method = #{httpMethod}, endpoint = #{endpoint}, version = #{version}, 
+            status = #{status}, description = #{description}, updated_at = #{updatedAt}
+        WHERE id = #{id}
+    </update>
+
+    <delete id="deleteById" parameterType="long">
+        DELETE FROM pgdev.api_endpoints
+        WHERE id = #{id}
+    </delete>
+</mapper>
