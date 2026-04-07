@@ -27,6 +27,27 @@
         <result property="defaultValue" column="default_value"/>
     </resultMap>
 
+    <resultMap id="apiDefinitionResultMap" type="com.pg.api.domain.ApiDefinition">
+        <id property="id" column="id"/>
+        <result property="apiCode" column="api_code"/>
+        <result property="apiName" column="api_name"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+    </resultMap>
+
+    <resultMap id="apiEndpointVersionResultMap" type="com.pg.api.domain.ApiEndpointVersion">
+        <id property="id" column="id"/>
+        <result property="apiDefinitionId" column="api_definition_id"/>
+        <result property="version" column="version"/>
+        <result property="endpoint" column="endpoint"/>
+        <result property="httpMethod" column="http_method"/>
+        <result property="status" column="status"/>
+        <result property="description" column="description"/>
+        <result property="isCurrent" column="is_current"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+    </resultMap>
+
     <select id="findAll" resultMap="apiEndpointResultMap">
         SELECT id, name, http_method, endpoint, version, status, description, created_at, updated_at
         FROM pgdev.api_endpoints
@@ -43,6 +64,37 @@
         SELECT id, name, http_method, endpoint, version, status, description, created_at, updated_at
         FROM pgdev.api_endpoints
         WHERE endpoint = #{endpoint}
+    </select>
+
+    <select id="findByNameAndVersion" resultMap="apiEndpointResultMap">
+        SELECT id, name, http_method, endpoint, version, status, description, created_at, updated_at
+        FROM pgdev.api_endpoints
+        WHERE name = #{name}
+          AND version = #{version}
+    </select>
+
+    <select id="findFieldsByEndpointAndVersion" resultMap="apiEndpointFieldResultMap">
+        SELECT f.id,
+               f.field_scope,
+               f.field_location,
+               f.field_name,
+               f.field_type,
+               f.required_yn,
+               f.field_order,
+               f.description,
+               f.sample_value,
+               f.default_value
+        FROM pgdev.api_endpoint_fields f
+        JOIN pgdev.api_endpoint_versions v ON v.id = f.api_version_id
+        WHERE v.endpoint = #{endpoint}
+          AND v.version = #{version}
+        ORDER BY
+            CASE f.field_scope
+                WHEN 'REQUEST' THEN 1
+                WHEN 'RESPONSE' THEN 2
+                ELSE 3
+            END,
+            f.field_order ASC
     </select>
 
     <select id="findFieldsByApiNameAndVersion" resultMap="apiEndpointFieldResultMap">
@@ -70,6 +122,22 @@
             f.field_order ASC
     </select>
 
+    <select id="findApiVersionByEndpointAndVersion" resultMap="apiEndpointVersionResultMap">
+        SELECT id,
+               api_definition_id,
+               version,
+               endpoint,
+               http_method,
+               status,
+               description,
+               is_current,
+               created_at,
+               updated_at
+        FROM pgdev.api_endpoint_versions
+        WHERE endpoint = #{endpoint}
+          AND version = #{version}
+    </select>
+
     <insert id="insert" useGeneratedKeys="true" keyProperty="id">
         INSERT INTO pgdev.api_endpoints (name, http_method, endpoint, version, status, description, created_at, updated_at)
         VALUES (#{name}, #{httpMethod}, #{endpoint}, #{version}, #{status}, #{description}, #{createdAt}, #{updatedAt})
@@ -77,8 +145,13 @@
 
     <update id="update">
         UPDATE pgdev.api_endpoints
-        SET name = #{name}, http_method = #{httpMethod}, endpoint = #{endpoint}, version = #{version}, 
-            status = #{status}, description = #{description}, updated_at = #{updatedAt}
+        SET name = #{name},
+            http_method = #{httpMethod},
+            endpoint = #{endpoint},
+            version = #{version},
+            status = #{status},
+            description = #{description},
+            updated_at = #{updatedAt}
         WHERE id = #{id}
     </update>
 
@@ -86,4 +159,89 @@
         DELETE FROM pgdev.api_endpoints
         WHERE id = #{id}
     </delete>
+
+    <insert id="insertApiDefinition" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO pgdev.api_definitions (api_code, api_name, created_at, updated_at)
+        VALUES (#{apiCode}, #{apiName}, #{createdAt}, #{updatedAt})
+    </insert>
+
+    <update id="updateApiDefinitionName">
+        UPDATE pgdev.api_definitions
+        SET api_name = #{apiName},
+            updated_at = #{updatedAt}
+        WHERE id = #{id}
+    </update>
+
+    <insert id="insertApiVersion" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO pgdev.api_endpoint_versions (
+            api_definition_id,
+            version,
+            endpoint,
+            http_method,
+            status,
+            description,
+            is_current,
+            created_at,
+            updated_at
+        )
+        VALUES (
+            #{apiDefinitionId},
+            #{version},
+            #{endpoint},
+            #{httpMethod},
+            #{status},
+            #{description},
+            #{isCurrent},
+            #{createdAt},
+            #{updatedAt}
+        )
+    </insert>
+
+    <update id="updateApiVersion">
+        UPDATE pgdev.api_endpoint_versions
+        SET version = #{version},
+            endpoint = #{endpoint},
+            http_method = #{httpMethod},
+            status = #{status},
+            description = #{description},
+            is_current = #{isCurrent},
+            updated_at = #{updatedAt}
+        WHERE id = #{id}
+    </update>
+
+    <delete id="deleteFieldsByApiVersionId">
+        DELETE FROM pgdev.api_endpoint_fields
+        WHERE api_version_id = #{apiVersionId}
+    </delete>
+
+    <insert id="insertApiField">
+        INSERT INTO pgdev.api_endpoint_fields (
+            api_version_id,
+            field_scope,
+            field_location,
+            field_name,
+            field_type,
+            required_yn,
+            field_order,
+            description,
+            sample_value,
+            default_value,
+            created_at,
+            updated_at
+        )
+        VALUES (
+            #{apiVersionId},
+            #{field.fieldScope},
+            #{field.fieldLocation},
+            #{field.fieldName},
+            #{field.fieldType},
+            #{field.requiredYn},
+            #{field.fieldOrder},
+            #{field.description},
+            #{field.sampleValue},
+            #{field.defaultValue},
+            CURRENT_TIMESTAMP,
+            CURRENT_TIMESTAMP
+        )
+    </insert>
 </mapper>

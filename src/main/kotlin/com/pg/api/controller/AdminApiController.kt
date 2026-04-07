@@ -38,7 +38,7 @@ class AdminApiController(private val adminApiService: AdminApiService) {
         val api = adminApiService.getApiEndpointById(id)
             ?: return ResponseEntity.status(404).body(ApiResponse("ERROR", null, "API를 찾을 수 없습니다: $id"))
 
-        val fields = adminApiService.getApiFields(api.name, api.version)
+        val fields = adminApiService.getApiFields(api.name, api.endpoint, api.version)
         return ResponseEntity.ok(ApiResponse("SUCCESS", convertToDetailResponse(api, fields.map { convertFieldToResponse(it) })))
     }
 
@@ -57,7 +57,7 @@ class AdminApiController(private val adminApiService: AdminApiService) {
                 status = request.status,
                 description = request.description
             )
-            val created = adminApiService.createApiEndpoint(newApi)
+            val created = adminApiService.createApiEndpoint(newApi, request.fields)
             ResponseEntity.status(201).body(ApiResponse("SUCCESS", convertToResponse(created)))
         } catch (e: Exception) {
             ResponseEntity.status(400).body(ApiResponse("ERROR", null, e.message))
@@ -79,10 +79,10 @@ class AdminApiController(private val adminApiService: AdminApiService) {
                 httpMethod = request.method,
                 endpoint = request.endpoint,
                 version = request.version,
-                status = request.status,
+                status = request.status ?: "정상 운영",
                 description = request.description
             )
-            val updated = adminApiService.updateApiEndpoint(id, updateApi)
+            val updated = adminApiService.updateApiEndpoint(id, updateApi, request.fields)
             ResponseEntity.ok(ApiResponse("SUCCESS", convertToResponse(updated)))
         } catch (e: Exception) {
             ResponseEntity.status(400).body(ApiResponse("ERROR", null, e.message))
