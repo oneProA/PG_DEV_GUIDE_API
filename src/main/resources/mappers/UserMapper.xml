@@ -15,4 +15,30 @@
         WHERE username = #{username}
     </select>
 
+    <select id="findUserIdByUsername" resultType="long">
+        SELECT user_id
+        FROM pgdev.users
+        WHERE username = #{username}
+    </select>
+
+    <insert id="insertUserActivityLog">
+        INSERT INTO pgdev.user_activity_logs (
+            user_id,
+            activity_type,
+            activity_title,
+            activity_detail,
+            actor_username,
+            ip_address,
+            user_agent
+        ) VALUES (
+            #{userId},
+            #{activityType},
+            #{activityTitle},
+            #{activityDetail},
+            #{actorUsername},
+            #{ipAddress},
+            #{userAgent}
+        )
+    </insert>
+
 </mapper>

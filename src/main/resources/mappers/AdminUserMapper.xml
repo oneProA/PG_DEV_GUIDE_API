@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.pg.api.repository.AdminUserMapper">
+
+    <resultMap id="adminUserResultMap" type="com.pg.api.domain.AdminUser">
+        <id property="id" column="user_id"/>
+        <result property="username" column="username"/>
+        <result property="name" column="name"/>
+        <result property="email" column="email"/>
+        <result property="status" column="status"/>
+        <result property="role" column="role"/>
+        <result property="phone" column="phone"/>
+        <result property="profileImageUrl" column="profile_image_url"/>
+        <result property="lastLoginAt" column="last_login_at"/>
+    </resultMap>
+
+    <resultMap id="userActivityLogResultMap" type="com.pg.api.domain.UserActivityLog">
+        <id property="id" column="id"/>
+        <result property="userId" column="user_id"/>
+        <result property="activityType" column="activity_type"/>
+        <result property="activityTitle" column="activity_title"/>
+        <result property="activityDetail" column="activity_detail"/>
+        <result property="actorUsername" column="actor_username"/>
+        <result property="createdAt" column="created_at"/>
+    </resultMap>
+
+    <sql id="adminUserFilters">
+        <where>
+            <if test="status != null and status != ''">
+                <choose>
+                    <when test="status == 'ACTIVE'">
+                        COALESCE(status, 'ACTIVE') = 'ACTIVE'
+                    </when>
+                    <otherwise>
+                        COALESCE(status, 'ACTIVE') != 'ACTIVE'
+                    </otherwise>
+                </choose>
+            </if>
+            <if test="keyword != null and keyword != ''">
+                AND (
+                    LOWER(username) LIKE CONCAT('%', LOWER(#{keyword}), '%')
+                    OR LOWER(COALESCE(name, username)) LIKE CONCAT('%', LOWER(#{keyword}), '%')
+                    OR LOWER(email) LIKE CONCAT('%', LOWER(#{keyword}), '%')
+                    OR LOWER(role) LIKE CONCAT('%', LOWER(#{keyword}), '%')
+                )
+            </if>
+        </where>
+    </sql>
+
+    <select id="findPage" resultMap="adminUserResultMap">
+        SELECT
+            user_id,
+            username,
+            COALESCE(name, username) AS name,
+            email,
+            COALESCE(status, 'ACTIVE') AS status,
+            role,
+            phone,
+            profile_image_url,
+            last_login_at
+        FROM pgdev.users
+        <include refid="adminUserFilters" />
+        ORDER BY user_id DESC
+        LIMIT #{limit}
+        OFFSET #{offset}
+    </select>
+
+    <select id="countAll" resultType="long">
+        SELECT COUNT(*)
+        FROM pgdev.users
+        <include refid="adminUserFilters" />
+    </select>
+
+    <select id="findById" resultMap="adminUserResultMap">
+        SELECT
+            user_id,
+            username,
+            COALESCE(name, username) AS name,
+            email,
+            COALESCE(status, 'ACTIVE') AS status,
+            role,
+            phone,
+            profile_image_url,
+            last_login_at
+        FROM pgdev.users
+        WHERE user_id = #{id}
+    </select>
+
+    <select id="findActivityLogsByActorUsername" resultMap="userActivityLogResultMap">
+        SELECT
+            id,
+            user_id,
+            activity_type,
+            activity_title,
+            activity_detail,
+            actor_username,
+            created_at
+        FROM pgdev.user_activity_logs
+        WHERE actor_username = #{actorUsername}
+        ORDER BY created_at DESC
+        LIMIT #{limit}
+    </select>
+
+</mapper>

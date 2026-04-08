@@ -1,0 +1,10 @@
+* text=auto eol=lf
+
+*.kt text
+*.kts text
+*.sql text
+*.yml text
+*.yaml text
+*.xml text
+*.properties text
+*.md text

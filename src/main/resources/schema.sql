@@ -59,10 +59,31 @@ CREATE TABLE IF NOT EXISTS pgdev.users (
     password TEXT NOT NULL,
     email VARCHAR(255) UNIQUE NOT NULL,
     role VARCHAR(50) NOT NULL DEFAULT 'USER',
-    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+    name VARCHAR(100),
+    phone VARCHAR(30),
+    status VARCHAR(20) NOT NULL DEFAULT 'ACTIVE',
+    profile_image_url TEXT,
+    last_login_at TIMESTAMP,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE INDEX IF NOT EXISTS idx_users_username ON pgdev.users(username);
+
+CREATE TABLE IF NOT EXISTS pgdev.user_activity_logs (
+    id BIGSERIAL PRIMARY KEY,
+    user_id BIGINT NOT NULL REFERENCES pgdev.users(user_id) ON DELETE CASCADE,
+    activity_type VARCHAR(50) NOT NULL,
+    activity_title VARCHAR(200) NOT NULL,
+    activity_detail TEXT,
+    actor_username VARCHAR(50),
+    ip_address VARCHAR(50),
+    user_agent TEXT,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_user_activity_logs_user_id ON pgdev.user_activity_logs(user_id);
+CREATE INDEX IF NOT EXISTS idx_user_activity_logs_created_at ON pgdev.user_activity_logs(created_at DESC);
 
 -- API ?붾뱶?ъ씤??愿由??뚯씠釉?
 CREATE TABLE IF NOT EXISTS pgdev.api_endpoints (
