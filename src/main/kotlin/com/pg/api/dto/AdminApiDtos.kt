@@ -6,6 +6,7 @@ data class AdminApiEntryResponse(
     val endpoint: String,
     val method: String,
     val version: String,
+    val displayOrder: Int,
     val status: String,
     val lastModified: String,
     val description: String? = null
@@ -30,6 +31,7 @@ data class AdminApiDetailResponse(
     val endpoint: String,
     val method: String,
     val version: String,
+    val displayOrder: Int,
     val status: String,
     val lastModified: String,
     val description: String? = null,
@@ -53,6 +55,7 @@ data class CreateAdminApiRequest(
     val method: String,
     val endpoint: String,
     val version: String,
+    val displayOrder: Int = 999,
     val status: String = "정상 운영",
     val description: String? = null,
     val fields: List<AdminApiFieldRequest> = emptyList()
@@ -63,6 +66,7 @@ data class UpdateAdminApiRequest(
     val method: String,
     val endpoint: String,
     val version: String,
+    val displayOrder: Int = 999,
     val status: String? = null,
     val description: String? = null,
     val fields: List<AdminApiFieldRequest> = emptyList()

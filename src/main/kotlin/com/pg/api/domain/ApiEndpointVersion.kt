@@ -8,6 +8,7 @@ data class ApiEndpointVersion(
     val version: String,
     val endpoint: String,
     val httpMethod: String,
+    val displayOrder: Int = 999,
     val status: String,
     val description: String? = null,
     val isCurrent: String = "Y",

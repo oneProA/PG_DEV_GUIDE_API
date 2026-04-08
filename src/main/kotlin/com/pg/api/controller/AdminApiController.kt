@@ -54,6 +54,7 @@ class AdminApiController(private val adminApiService: AdminApiService) {
                 httpMethod = request.method,
                 endpoint = request.endpoint,
                 version = request.version,
+                displayOrder = request.displayOrder,
                 status = request.status,
                 description = request.description
             )
@@ -79,6 +80,7 @@ class AdminApiController(private val adminApiService: AdminApiService) {
                 httpMethod = request.method,
                 endpoint = request.endpoint,
                 version = request.version,
+                displayOrder = request.displayOrder,
                 status = request.status ?: "정상 운영",
                 description = request.description
             )
@@ -127,6 +129,7 @@ class AdminApiController(private val adminApiService: AdminApiService) {
             endpoint = api.endpoint,
             method = api.httpMethod,
             version = api.version,
+            displayOrder = api.displayOrder,
             status = api.status,
             lastModified = api.updatedAt.format(dateTimeFormatter),
             description = api.description
@@ -143,6 +146,7 @@ class AdminApiController(private val adminApiService: AdminApiService) {
             endpoint = api.endpoint,
             method = api.httpMethod,
             version = api.version,
+            displayOrder = api.displayOrder,
             status = api.status,
             lastModified = api.updatedAt.format(dateTimeFormatter),
             description = api.description,

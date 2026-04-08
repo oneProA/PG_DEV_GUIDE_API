@@ -11,6 +11,7 @@ data class ApiEndpoint(
     val httpMethod: String,
     val endpoint: String,
     val version: String,
+    val displayOrder: Int = 999,
     var status: String = "정상 운영",
     val description: String? = null,
     val createdAt: LocalDateTime = LocalDateTime.now(),

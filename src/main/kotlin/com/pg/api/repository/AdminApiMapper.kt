@@ -1,4 +1,4 @@
-package com.pg.api.repository
+﻿package com.pg.api.repository
 
 import com.pg.api.domain.ApiDefinition
 import com.pg.api.domain.ApiEndpoint
@@ -60,4 +60,7 @@ interface AdminApiMapper {
         @Param("apiVersionId") apiVersionId: Long,
         @Param("field") field: ApiEndpointField
     ): Int
+
+    fun updateDisplayOrderColumn(): Int
 }
+

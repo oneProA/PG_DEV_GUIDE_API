@@ -1,4 +1,4 @@
--- 테이블 초기화 (필요 시)
+﻿-- ?뚯씠釉?珥덇린??(?꾩슂 ??
 CREATE SCHEMA IF NOT EXISTS pgdev;
 
 DROP TABLE IF EXISTS pgdev.payment_card_details CASCADE;
@@ -10,7 +10,7 @@ DROP TABLE IF EXISTS pgdev.api_endpoint_fields CASCADE;
 DROP TABLE IF EXISTS pgdev.api_endpoint_versions CASCADE;
 DROP TABLE IF EXISTS pgdev.api_definitions CASCADE;
 
--- 결제 마스터 테이블
+-- 寃곗젣 留덉뒪???뚯씠釉?
 CREATE TABLE IF NOT EXISTS pgdev.payments (
     id BIGSERIAL PRIMARY KEY,
     payment_id VARCHAR(50) UNIQUE NOT NULL,
@@ -26,7 +26,7 @@ CREATE TABLE IF NOT EXISTS pgdev.payments (
     CONSTRAINT chk_payments_amount_nonnegative CHECK (amount >= 0)
 );
 
--- 카드 결제 상세 테이블
+-- 移대뱶 寃곗젣 ?곸꽭 ?뚯씠釉?
 CREATE TABLE IF NOT EXISTS pgdev.payment_card_details (
     payment_id BIGINT PRIMARY KEY REFERENCES pgdev.payments(id),
     issuer VARCHAR(50),
@@ -35,7 +35,7 @@ CREATE TABLE IF NOT EXISTS pgdev.payment_card_details (
     CONSTRAINT chk_payment_card_details_installment_month_nonnegative CHECK (installment_month >= 0)
 );
 
--- 취소 내역 테이블
+-- 痍⑥냼 ?댁뿭 ?뚯씠釉?
 CREATE TABLE IF NOT EXISTS pgdev.cancellations (
     id BIGSERIAL PRIMARY KEY,
     cancel_id VARCHAR(50) UNIQUE NOT NULL,
@@ -52,7 +52,7 @@ CREATE INDEX IF NOT EXISTS idx_payments_tid ON pgdev.payments(tid);
 CREATE INDEX IF NOT EXISTS idx_payments_order_id ON pgdev.payments(order_id);
 CREATE INDEX IF NOT EXISTS idx_cancellations_payment_id ON pgdev.cancellations(payment_id);
 
--- 사용자 정보
+-- ?ъ슜???뺣낫
 CREATE TABLE IF NOT EXISTS pgdev.users (
     user_id BIGSERIAL PRIMARY KEY,
     username VARCHAR(50) UNIQUE NOT NULL,
@@ -64,14 +64,15 @@ CREATE TABLE IF NOT EXISTS pgdev.users (
 
 CREATE INDEX IF NOT EXISTS idx_users_username ON pgdev.users(username);
 
--- API 엔드포인트 관리 테이블
+-- API ?붾뱶?ъ씤??愿由??뚯씠釉?
 CREATE TABLE IF NOT EXISTS pgdev.api_endpoints (
     id BIGSERIAL PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
     http_method VARCHAR(10) NOT NULL,
     endpoint VARCHAR(255) NOT NULL UNIQUE,
     version VARCHAR(20) NOT NULL,
-    status VARCHAR(50) NOT NULL DEFAULT '정상 운영',
+    display_order INT NOT NULL DEFAULT 999,
+    status VARCHAR(50) NOT NULL DEFAULT '?뺤긽 ?댁쁺',
     description TEXT,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
@@ -80,16 +81,15 @@ CREATE TABLE IF NOT EXISTS pgdev.api_endpoints (
 CREATE INDEX IF NOT EXISTS idx_api_endpoints_endpoint ON pgdev.api_endpoints(endpoint);
 CREATE INDEX IF NOT EXISTS idx_api_endpoints_status ON pgdev.api_endpoints(status);
 
--- 샘플 API 엔드포인트 데이터 (초기 목업)
-INSERT INTO pgdev.api_endpoints (name, http_method, endpoint, version, status, description, created_at, updated_at)
+-- ?섑뵆 API ?붾뱶?ъ씤???곗씠??(珥덇린 紐⑹뾽)
+INSERT INTO pgdev.api_endpoints (name, http_method, endpoint, version, display_order, status, description, created_at, updated_at)
 VALUES 
-('결제 요청', 'POST', '/v1/payments/request', 'v1.0.0', '정상 운영', '결제를 요청합니다.', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-('결제 상태 조회', 'GET', '/v1/payments/status/:paymentId', 'v1.0.0', '정상 운영', '결제 정보 및 취소 내역을 조회합니다.', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-('결제 취소', 'POST', '/v1/payments/cancel', 'v1.0.0', '정상 운영', '결제 전체 또는 부분 취소를 처리합니다.', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+('寃곗젣 ?붿껌', 'POST', '/v1/payments/request', 'v1.0.0', 1, '?뺤긽 ?댁쁺', '寃곗젣瑜??붿껌?⑸땲??', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+('寃곗젣 ?곹깭 議고쉶', 'GET', '/v1/payments/status/:paymentId', 'v1.0.0', 3, '?뺤긽 ?댁쁺', '寃곗젣 ?뺣낫 諛?痍⑥냼 ?댁뿭??議고쉶?⑸땲??', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+('寃곗젣 痍⑥냼', 'POST', '/v1/payments/cancel', 'v1.0.0', 2, '?뺤긽 ?댁쁺', '寃곗젣 ?꾩껜 ?먮뒗 遺遺?痍⑥냼瑜?泥섎━?⑸땲??', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
 ON CONFLICT DO NOTHING;
 
--- API 정의 마스터
-CREATE TABLE IF NOT EXISTS pgdev.api_definitions (
+-- API ?뺤쓽 留덉뒪??CREATE TABLE IF NOT EXISTS pgdev.api_definitions (
     id BIGSERIAL PRIMARY KEY,
     api_code VARCHAR(100) NOT NULL UNIQUE,
     api_name VARCHAR(255) NOT NULL,
@@ -97,14 +97,14 @@ CREATE TABLE IF NOT EXISTS pgdev.api_definitions (
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
--- API 버전별 스펙
+-- API 踰꾩쟾蹂??ㅽ럺
 CREATE TABLE IF NOT EXISTS pgdev.api_endpoint_versions (
     id BIGSERIAL PRIMARY KEY,
     api_definition_id BIGINT NOT NULL REFERENCES pgdev.api_definitions(id),
     version VARCHAR(20) NOT NULL,
     endpoint VARCHAR(255) NOT NULL,
     http_method VARCHAR(10) NOT NULL,
-    status VARCHAR(50) NOT NULL DEFAULT '정상 운영',
+    status VARCHAR(50) NOT NULL DEFAULT '?뺤긽 ?댁쁺',
     description TEXT,
     is_current CHAR(1) NOT NULL DEFAULT 'Y',
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -116,7 +116,7 @@ CREATE TABLE IF NOT EXISTS pgdev.api_endpoint_versions (
 CREATE INDEX IF NOT EXISTS idx_api_endpoint_versions_definition
     ON pgdev.api_endpoint_versions(api_definition_id);
 
--- API 요청/응답 필드 정의
+-- API ?붿껌/?묐떟 ?꾨뱶 ?뺤쓽
 CREATE TABLE IF NOT EXISTS pgdev.api_endpoint_fields (
     id BIGSERIAL PRIMARY KEY,
     api_version_id BIGINT NOT NULL REFERENCES pgdev.api_endpoint_versions(id) ON DELETE CASCADE,
@@ -142,46 +142,46 @@ CREATE INDEX IF NOT EXISTS idx_api_endpoint_fields_version
 CREATE INDEX IF NOT EXISTS idx_api_endpoint_fields_order
     ON pgdev.api_endpoint_fields(api_version_id, field_scope, field_order);
 
--- API 정의 시드
+-- API ?뺤쓽 ?쒕뱶
 INSERT INTO pgdev.api_definitions (api_code, api_name, created_at, updated_at)
 VALUES
-('PAYMENT_READY', '결제 요청', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-('PAYMENT_CANCEL', '결제 취소', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-('PAYMENT_STATUS', '결제 상태 조회', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+('PAYMENT_READY', '寃곗젣 ?붿껌', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+('PAYMENT_CANCEL', '寃곗젣 痍⑥냼', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+('PAYMENT_STATUS', '寃곗젣 ?곹깭 議고쉶', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
 ON CONFLICT (api_code) DO NOTHING;
 
--- API 버전 시드
+-- API 踰꾩쟾 ?쒕뱶
 INSERT INTO pgdev.api_endpoint_versions (
-    api_definition_id, version, endpoint, http_method, status, description, is_current, created_at, updated_at
+    api_definition_id, version, endpoint, http_method, display_order, status, description, is_current, created_at, updated_at
 )
-SELECT id, 'v1.0.0', '/api/pay/ready', 'POST', '정상 운영', '결제 준비 요청 API입니다. 문서상 RESPONSE는 최종 결제 결과 기준으로 정의하며, kakaoPay 선택 시 최초 응답으로 next_redirect_pc_url이 반환됩니다.', 'Y', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+SELECT id, 'v1.0.0', '/api/pay/ready', 'POST', 1, '?뺤긽 ?댁쁺', '寃곗젣 以鍮??붿껌 API?낅땲?? 臾몄꽌??RESPONSE??理쒖쥌 寃곗젣 寃곌낵 湲곗??쇰줈 ?뺤쓽?섎ŉ, kakaoPay ?좏깮 ??理쒖큹 ?묐떟?쇰줈 next_redirect_pc_url??諛섑솚?⑸땲??', 'Y', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
 FROM pgdev.api_definitions
 WHERE api_code = 'PAYMENT_READY'
 ON CONFLICT (api_definition_id, version) DO NOTHING;
 
 INSERT INTO pgdev.api_endpoint_versions (
-    api_definition_id, version, endpoint, http_method, status, description, is_current, created_at, updated_at
+    api_definition_id, version, endpoint, http_method, display_order, status, description, is_current, created_at, updated_at
 )
-SELECT id, 'v1.0.0', '/api/pay/cancel', 'POST', '정상 운영', '주문 번호 기준으로 결제 취소를 수행합니다.', 'Y', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+SELECT id, 'v1.0.0', '/api/pay/cancel', 'POST', 2, '?뺤긽 ?댁쁺', '二쇰Ц 踰덊샇 湲곗??쇰줈 寃곗젣 痍⑥냼瑜??섑뻾?⑸땲??', 'Y', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
 FROM pgdev.api_definitions
 WHERE api_code = 'PAYMENT_CANCEL'
 ON CONFLICT (api_definition_id, version) DO NOTHING;
 
 INSERT INTO pgdev.api_endpoint_versions (
-    api_definition_id, version, endpoint, http_method, status, description, is_current, created_at, updated_at
+    api_definition_id, version, endpoint, http_method, display_order, status, description, is_current, created_at, updated_at
 )
-SELECT id, 'v1.0.0', '/api/pay/status/{orderId}', 'GET', '정상 운영', '주문 번호 기준으로 결제 상태를 조회합니다.', 'Y', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+SELECT id, 'v1.0.0', '/api/pay/status/{orderId}', 'GET', 3, '?뺤긽 ?댁쁺', '二쇰Ц 踰덊샇 湲곗??쇰줈 寃곗젣 ?곹깭瑜?議고쉶?⑸땲??', 'Y', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
 FROM pgdev.api_definitions
 WHERE api_code = 'PAYMENT_STATUS'
 ON CONFLICT (api_definition_id, version) DO NOTHING;
 
--- 결제 요청 API 입력 필드
+-- 寃곗젣 ?붿껌 API ?낅젰 ?꾨뱶
 INSERT INTO pgdev.api_endpoint_fields (
     api_version_id, field_scope, field_location, field_name, field_type,
     required_yn, field_order, description, sample_value, default_value, created_at, updated_at
 )
 SELECT v.id, 'REQUEST', 'QUERY', 'paymentMethodId', 'String',
-       'Y', 1, '결제 수단 식별자(kakaoPay 또는 tossPay)', 'tossPay', null, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+       'Y', 1, '寃곗젣 ?섎떒 ?앸퀎??kakaoPay ?먮뒗 tossPay)', 'tossPay', null, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
 FROM pgdev.api_endpoint_versions v
 JOIN pgdev.api_definitions d ON d.id = v.api_definition_id
 WHERE d.api_code = 'PAYMENT_READY' AND v.version = 'v1.0.0';
@@ -191,7 +191,7 @@ INSERT INTO pgdev.api_endpoint_fields (
     required_yn, field_order, description, sample_value, default_value, created_at, updated_at
 )
 SELECT v.id, 'REQUEST', 'QUERY', 'orderId', 'String',
-       'N', 2, '가맹점 주문 번호. 없으면 서버에서 UUID 생성', 'ORD-20260406-0001', null, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+       'N', 2, '媛留뱀젏 二쇰Ц 踰덊샇. ?놁쑝硫??쒕쾭?먯꽌 UUID ?앹꽦', 'ORD-20260406-0001', null, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
 FROM pgdev.api_endpoint_versions v
 JOIN pgdev.api_definitions d ON d.id = v.api_definition_id
 WHERE d.api_code = 'PAYMENT_READY' AND v.version = 'v1.0.0';
@@ -201,7 +201,7 @@ INSERT INTO pgdev.api_endpoint_fields (
     required_yn, field_order, description, sample_value, default_value, created_at, updated_at
 )
 SELECT v.id, 'REQUEST', 'QUERY', 'userId', 'String',
-       'Y', 3, '가맹점 사용자 ID', 'user01', null, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+       'Y', 3, '媛留뱀젏 ?ъ슜??ID', 'user01', null, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
 FROM pgdev.api_endpoint_versions v
 JOIN pgdev.api_definitions d ON d.id = v.api_definition_id
 WHERE d.api_code = 'PAYMENT_READY' AND v.version = 'v1.0.0';
@@ -211,7 +211,7 @@ INSERT INTO pgdev.api_endpoint_fields (
     required_yn, field_order, description, sample_value, default_value, created_at, updated_at
 )
 SELECT v.id, 'REQUEST', 'QUERY', 'itemName', 'String',
-       'Y', 4, '상품명', '테스트 상품', null, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+       'Y', 4, '?곹뭹紐?, '?뚯뒪???곹뭹', null, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
 FROM pgdev.api_endpoint_versions v
 JOIN pgdev.api_definitions d ON d.id = v.api_definition_id
 WHERE d.api_code = 'PAYMENT_READY' AND v.version = 'v1.0.0';
@@ -221,7 +221,7 @@ INSERT INTO pgdev.api_endpoint_fields (
     required_yn, field_order, description, sample_value, default_value, created_at, updated_at
 )
 SELECT v.id, 'REQUEST', 'QUERY', 'amount', 'Integer',
-       'Y', 5, '결제 금액', '10000', null, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+       'Y', 5, '寃곗젣 湲덉븸', '10000', null, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
 FROM pgdev.api_endpoint_versions v
 JOIN pgdev.api_definitions d ON d.id = v.api_definition_id
 WHERE d.api_code = 'PAYMENT_READY' AND v.version = 'v1.0.0';
@@ -231,7 +231,7 @@ INSERT INTO pgdev.api_endpoint_fields (
     required_yn, field_order, description, sample_value, default_value, created_at, updated_at
 )
 SELECT v.id, 'REQUEST', 'QUERY', 'approvalUrl', 'String',
-       'N', 6, '결제 성공 후 이동할 URL', 'https://merchant.example/success', null, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+       'N', 6, '寃곗젣 ?깃났 ???대룞??URL', 'https://merchant.example/success', null, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
 FROM pgdev.api_endpoint_versions v
 JOIN pgdev.api_definitions d ON d.id = v.api_definition_id
 WHERE d.api_code = 'PAYMENT_READY' AND v.version = 'v1.0.0';
@@ -241,7 +241,7 @@ INSERT INTO pgdev.api_endpoint_fields (
     required_yn, field_order, description, sample_value, default_value, created_at, updated_at
 )
 SELECT v.id, 'REQUEST', 'QUERY', 'cancelUrl', 'String',
-       'N', 7, '결제 취소 후 이동할 URL', 'https://merchant.example/cancel', null, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+       'N', 7, '寃곗젣 痍⑥냼 ???대룞??URL', 'https://merchant.example/cancel', null, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
 FROM pgdev.api_endpoint_versions v
 JOIN pgdev.api_definitions d ON d.id = v.api_definition_id
 WHERE d.api_code = 'PAYMENT_READY' AND v.version = 'v1.0.0';
@@ -251,18 +251,18 @@ INSERT INTO pgdev.api_endpoint_fields (
     required_yn, field_order, description, sample_value, default_value, created_at, updated_at
 )
 SELECT v.id, 'REQUEST', 'QUERY', 'failUrl', 'String',
-       'N', 8, '결제 실패 후 이동할 URL', 'https://merchant.example/fail', null, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+       'N', 8, '寃곗젣 ?ㅽ뙣 ???대룞??URL', 'https://merchant.example/fail', null, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
 FROM pgdev.api_endpoint_versions v
 JOIN pgdev.api_definitions d ON d.id = v.api_definition_id
 WHERE d.api_code = 'PAYMENT_READY' AND v.version = 'v1.0.0';
 
--- 결제 요청 API 출력 필드
+-- 寃곗젣 ?붿껌 API 異쒕젰 ?꾨뱶
 INSERT INTO pgdev.api_endpoint_fields (
     api_version_id, field_scope, field_location, field_name, field_type,
     required_yn, field_order, description, sample_value, default_value, created_at, updated_at
 )
 SELECT v.id, 'RESPONSE', 'BODY', 'orderId', 'String',
-       'Y', 1, '최종 결제 결과 기준 주문 번호', 'ORD-20260406-0001', null, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+       'Y', 1, '理쒖쥌 寃곗젣 寃곌낵 湲곗? 二쇰Ц 踰덊샇', 'ORD-20260406-0001', null, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
 FROM pgdev.api_endpoint_versions v
 JOIN pgdev.api_definitions d ON d.id = v.api_definition_id
 WHERE d.api_code = 'PAYMENT_READY' AND v.version = 'v1.0.0';
@@ -272,7 +272,7 @@ INSERT INTO pgdev.api_endpoint_fields (
     required_yn, field_order, description, sample_value, default_value, created_at, updated_at
 )
 SELECT v.id, 'RESPONSE', 'BODY', 'paymentMethodId', 'String',
-       'Y', 2, '최종 결제 결과 기준 결제 수단 식별자', 'kakaoPay', null, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+       'Y', 2, '理쒖쥌 寃곗젣 寃곌낵 湲곗? 寃곗젣 ?섎떒 ?앸퀎??, 'kakaoPay', null, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
 FROM pgdev.api_endpoint_versions v
 JOIN pgdev.api_definitions d ON d.id = v.api_definition_id
 WHERE d.api_code = 'PAYMENT_READY' AND v.version = 'v1.0.0';
@@ -282,7 +282,7 @@ INSERT INTO pgdev.api_endpoint_fields (
     required_yn, field_order, description, sample_value, default_value, created_at, updated_at
 )
 SELECT v.id, 'RESPONSE', 'BODY', 'paymentId', 'String',
-       'Y', 3, '최종 결제 결과 기준 PG 거래 고유 키', 'T1234567890', null, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+       'Y', 3, '理쒖쥌 寃곗젣 寃곌낵 湲곗? PG 嫄곕옒 怨좎쑀 ??, 'T1234567890', null, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
 FROM pgdev.api_endpoint_versions v
 JOIN pgdev.api_definitions d ON d.id = v.api_definition_id
 WHERE d.api_code = 'PAYMENT_READY' AND v.version = 'v1.0.0';
@@ -292,7 +292,7 @@ INSERT INTO pgdev.api_endpoint_fields (
     required_yn, field_order, description, sample_value, default_value, created_at, updated_at
 )
 SELECT v.id, 'RESPONSE', 'BODY', 'status', 'String',
-       'Y', 4, '최종 결제 결과 기준 상태값', 'APPROVED', null, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+       'Y', 4, '理쒖쥌 寃곗젣 寃곌낵 湲곗? ?곹깭媛?, 'APPROVED', null, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
 FROM pgdev.api_endpoint_versions v
 JOIN pgdev.api_definitions d ON d.id = v.api_definition_id
 WHERE d.api_code = 'PAYMENT_READY' AND v.version = 'v1.0.0';
@@ -302,7 +302,7 @@ INSERT INTO pgdev.api_endpoint_fields (
     required_yn, field_order, description, sample_value, default_value, created_at, updated_at
 )
 SELECT v.id, 'RESPONSE', 'BODY', 'amount', 'Integer',
-       'Y', 5, '최종 결제 승인 금액', '10000', null, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+       'Y', 5, '理쒖쥌 寃곗젣 ?뱀씤 湲덉븸', '10000', null, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
 FROM pgdev.api_endpoint_versions v
 JOIN pgdev.api_definitions d ON d.id = v.api_definition_id
 WHERE d.api_code = 'PAYMENT_READY' AND v.version = 'v1.0.0';
@@ -312,7 +312,7 @@ INSERT INTO pgdev.api_endpoint_fields (
     required_yn, field_order, description, sample_value, default_value, created_at, updated_at
 )
 SELECT v.id, 'RESPONSE', 'BODY', 'approvedAt', 'LocalDateTime',
-       'Y', 6, '최종 결제 승인 시각', '2026-04-06T17:20:00', null, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+       'Y', 6, '理쒖쥌 寃곗젣 ?뱀씤 ?쒓컖', '2026-04-06T17:20:00', null, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
 FROM pgdev.api_endpoint_versions v
 JOIN pgdev.api_definitions d ON d.id = v.api_definition_id
 WHERE d.api_code = 'PAYMENT_READY' AND v.version = 'v1.0.0';
@@ -322,18 +322,18 @@ INSERT INTO pgdev.api_endpoint_fields (
     required_yn, field_order, description, sample_value, default_value, created_at, updated_at
 )
 SELECT v.id, 'RESPONSE', 'BODY', 'next_redirect_pc_url', 'String',
-       'N', 7, '참고 필드입니다. kakaoPay 선택 시 최초 응답으로 외부 결제 페이지 URL이 반환됩니다. tossPay는 내부 checkout 브릿지 URL 흐름을 사용합니다.', 'https://online-pay.kakaopay.com/...', null, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+       'N', 7, '李멸퀬 ?꾨뱶?낅땲?? kakaoPay ?좏깮 ??理쒖큹 ?묐떟?쇰줈 ?몃? 寃곗젣 ?섏씠吏 URL??諛섑솚?⑸땲?? tossPay???대? checkout 釉뚮┸吏 URL ?먮쫫???ъ슜?⑸땲??', 'https://online-pay.kakaopay.com/...', null, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
 FROM pgdev.api_endpoint_versions v
 JOIN pgdev.api_definitions d ON d.id = v.api_definition_id
 WHERE d.api_code = 'PAYMENT_READY' AND v.version = 'v1.0.0';
 
--- 결제 취소 API 입력 필드
+-- 寃곗젣 痍⑥냼 API ?낅젰 ?꾨뱶
 INSERT INTO pgdev.api_endpoint_fields (
     api_version_id, field_scope, field_location, field_name, field_type,
     required_yn, field_order, description, sample_value, default_value, created_at, updated_at
 )
 SELECT v.id, 'REQUEST', 'QUERY', 'orderId', 'String',
-       'Y', 1, '취소할 주문 번호', 'ORD-20260406-0001', null, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+       'Y', 1, '痍⑥냼??二쇰Ц 踰덊샇', 'ORD-20260406-0001', null, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
 FROM pgdev.api_endpoint_versions v
 JOIN pgdev.api_definitions d ON d.id = v.api_definition_id
 WHERE d.api_code = 'PAYMENT_CANCEL' AND v.version = 'v1.0.0';
@@ -343,7 +343,7 @@ INSERT INTO pgdev.api_endpoint_fields (
     required_yn, field_order, description, sample_value, default_value, created_at, updated_at
 )
 SELECT v.id, 'REQUEST', 'QUERY', 'cancelAmount', 'Integer',
-       'Y', 2, '취소 금액', '1000', null, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+       'Y', 2, '痍⑥냼 湲덉븸', '1000', null, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
 FROM pgdev.api_endpoint_versions v
 JOIN pgdev.api_definitions d ON d.id = v.api_definition_id
 WHERE d.api_code = 'PAYMENT_CANCEL' AND v.version = 'v1.0.0';
@@ -353,18 +353,18 @@ INSERT INTO pgdev.api_endpoint_fields (
     required_yn, field_order, description, sample_value, default_value, created_at, updated_at
 )
 SELECT v.id, 'REQUEST', 'QUERY', 'cancelReason', 'String',
-       'N', 3, '취소 사유', '고객 변심', '고객 변심', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+       'N', 3, '痍⑥냼 ?ъ쑀', '怨좉컼 蹂??, '怨좉컼 蹂??, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
 FROM pgdev.api_endpoint_versions v
 JOIN pgdev.api_definitions d ON d.id = v.api_definition_id
 WHERE d.api_code = 'PAYMENT_CANCEL' AND v.version = 'v1.0.0';
 
--- 결제 취소 API 출력 필드
+-- 寃곗젣 痍⑥냼 API 異쒕젰 ?꾨뱶
 INSERT INTO pgdev.api_endpoint_fields (
     api_version_id, field_scope, field_location, field_name, field_type,
     required_yn, field_order, description, sample_value, default_value, created_at, updated_at
 )
 SELECT v.id, 'RESPONSE', 'BODY', 'orderId', 'String',
-       'Y', 1, '가맹점 주문 번호', 'ORD-20260406-0001', null, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+       'Y', 1, '媛留뱀젏 二쇰Ц 踰덊샇', 'ORD-20260406-0001', null, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
 FROM pgdev.api_endpoint_versions v
 JOIN pgdev.api_definitions d ON d.id = v.api_definition_id
 WHERE d.api_code = 'PAYMENT_CANCEL' AND v.version = 'v1.0.0';
@@ -374,7 +374,7 @@ INSERT INTO pgdev.api_endpoint_fields (
     required_yn, field_order, description, sample_value, default_value, created_at, updated_at
 )
 SELECT v.id, 'RESPONSE', 'BODY', 'paymentMethodId', 'String',
-       'Y', 2, '결제 수단 식별자', 'kakaoPay', null, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+       'Y', 2, '寃곗젣 ?섎떒 ?앸퀎??, 'kakaoPay', null, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
 FROM pgdev.api_endpoint_versions v
 JOIN pgdev.api_definitions d ON d.id = v.api_definition_id
 WHERE d.api_code = 'PAYMENT_CANCEL' AND v.version = 'v1.0.0';
@@ -384,7 +384,7 @@ INSERT INTO pgdev.api_endpoint_fields (
     required_yn, field_order, description, sample_value, default_value, created_at, updated_at
 )
 SELECT v.id, 'RESPONSE', 'BODY', 'status', 'String',
-       'Y', 3, '취소 처리 상태', 'CANCELED', null, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+       'Y', 3, '痍⑥냼 泥섎━ ?곹깭', 'CANCELED', null, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
 FROM pgdev.api_endpoint_versions v
 JOIN pgdev.api_definitions d ON d.id = v.api_definition_id
 WHERE d.api_code = 'PAYMENT_CANCEL' AND v.version = 'v1.0.0';
@@ -394,7 +394,7 @@ INSERT INTO pgdev.api_endpoint_fields (
     required_yn, field_order, description, sample_value, default_value, created_at, updated_at
 )
 SELECT v.id, 'RESPONSE', 'BODY', 'cancelAmount', 'Integer',
-       'Y', 4, '이번 요청으로 취소된 금액', '1000', null, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+       'Y', 4, '?대쾲 ?붿껌?쇰줈 痍⑥냼??湲덉븸', '1000', null, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
 FROM pgdev.api_endpoint_versions v
 JOIN pgdev.api_definitions d ON d.id = v.api_definition_id
 WHERE d.api_code = 'PAYMENT_CANCEL' AND v.version = 'v1.0.0';
@@ -404,7 +404,7 @@ INSERT INTO pgdev.api_endpoint_fields (
     required_yn, field_order, description, sample_value, default_value, created_at, updated_at
 )
 SELECT v.id, 'RESPONSE', 'BODY', 'remainAmount', 'Integer',
-       'Y', 5, '취소 후 남은 금액', '9000', null, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+       'Y', 5, '痍⑥냼 ???⑥? 湲덉븸', '9000', null, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
 FROM pgdev.api_endpoint_versions v
 JOIN pgdev.api_definitions d ON d.id = v.api_definition_id
 WHERE d.api_code = 'PAYMENT_CANCEL' AND v.version = 'v1.0.0';
@@ -414,7 +414,7 @@ INSERT INTO pgdev.api_endpoint_fields (
     required_yn, field_order, description, sample_value, default_value, created_at, updated_at
 )
 SELECT v.id, 'RESPONSE', 'BODY', 'canceledAt', 'String',
-       'Y', 6, '취소 승인 일시', '2026-04-06T16:00:00', null, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+       'Y', 6, '痍⑥냼 ?뱀씤 ?쇱떆', '2026-04-06T16:00:00', null, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
 FROM pgdev.api_endpoint_versions v
 JOIN pgdev.api_definitions d ON d.id = v.api_definition_id
 WHERE d.api_code = 'PAYMENT_CANCEL' AND v.version = 'v1.0.0';
@@ -424,29 +424,29 @@ INSERT INTO pgdev.api_endpoint_fields (
     required_yn, field_order, description, sample_value, default_value, created_at, updated_at
 )
 SELECT v.id, 'RESPONSE', 'BODY', 'paymentId', 'String',
-       'Y', 7, 'PG 거래 고유 키', 'T1234567890', null, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+       'Y', 7, 'PG 嫄곕옒 怨좎쑀 ??, 'T1234567890', null, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
 FROM pgdev.api_endpoint_versions v
 JOIN pgdev.api_definitions d ON d.id = v.api_definition_id
 WHERE d.api_code = 'PAYMENT_CANCEL' AND v.version = 'v1.0.0';
 
--- 결제 상태 조회 API 입력 필드
+-- 寃곗젣 ?곹깭 議고쉶 API ?낅젰 ?꾨뱶
 INSERT INTO pgdev.api_endpoint_fields (
     api_version_id, field_scope, field_location, field_name, field_type,
     required_yn, field_order, description, sample_value, default_value, created_at, updated_at
 )
 SELECT v.id, 'REQUEST', 'PATH', 'orderId', 'String',
-       'Y', 1, '조회할 주문 번호', 'ORD-20260406-0001', null, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+       'Y', 1, '議고쉶??二쇰Ц 踰덊샇', 'ORD-20260406-0001', null, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
 FROM pgdev.api_endpoint_versions v
 JOIN pgdev.api_definitions d ON d.id = v.api_definition_id
 WHERE d.api_code = 'PAYMENT_STATUS' AND v.version = 'v1.0.0';
 
--- 결제 상태 조회 API 출력 필드
+-- 寃곗젣 ?곹깭 議고쉶 API 異쒕젰 ?꾨뱶
 INSERT INTO pgdev.api_endpoint_fields (
     api_version_id, field_scope, field_location, field_name, field_type,
     required_yn, field_order, description, sample_value, default_value, created_at, updated_at
 )
 SELECT v.id, 'RESPONSE', 'BODY', 'orderId', 'String',
-       'Y', 1, '주문 번호', 'ORD-20260406-0001', null, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+       'Y', 1, '二쇰Ц 踰덊샇', 'ORD-20260406-0001', null, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
 FROM pgdev.api_endpoint_versions v
 JOIN pgdev.api_definitions d ON d.id = v.api_definition_id
 WHERE d.api_code = 'PAYMENT_STATUS' AND v.version = 'v1.0.0';
@@ -456,7 +456,7 @@ INSERT INTO pgdev.api_endpoint_fields (
     required_yn, field_order, description, sample_value, default_value, created_at, updated_at
 )
 SELECT v.id, 'RESPONSE', 'BODY', 'userId', 'String',
-       'Y', 2, '가맹점 사용자 ID', 'user01', null, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+       'Y', 2, '媛留뱀젏 ?ъ슜??ID', 'user01', null, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
 FROM pgdev.api_endpoint_versions v
 JOIN pgdev.api_definitions d ON d.id = v.api_definition_id
 WHERE d.api_code = 'PAYMENT_STATUS' AND v.version = 'v1.0.0';
@@ -466,7 +466,7 @@ INSERT INTO pgdev.api_endpoint_fields (
     required_yn, field_order, description, sample_value, default_value, created_at, updated_at
 )
 SELECT v.id, 'RESPONSE', 'BODY', 'amount', 'Long',
-       'Y', 3, '결제 금액', '10000', null, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+       'Y', 3, '寃곗젣 湲덉븸', '10000', null, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
 FROM pgdev.api_endpoint_versions v
 JOIN pgdev.api_definitions d ON d.id = v.api_definition_id
 WHERE d.api_code = 'PAYMENT_STATUS' AND v.version = 'v1.0.0';
@@ -476,7 +476,7 @@ INSERT INTO pgdev.api_endpoint_fields (
     required_yn, field_order, description, sample_value, default_value, created_at, updated_at
 )
 SELECT v.id, 'RESPONSE', 'BODY', 'status', 'String',
-       'Y', 4, '결제 상태', 'READY', null, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+       'Y', 4, '寃곗젣 ?곹깭', 'READY', null, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
 FROM pgdev.api_endpoint_versions v
 JOIN pgdev.api_definitions d ON d.id = v.api_definition_id
 WHERE d.api_code = 'PAYMENT_STATUS' AND v.version = 'v1.0.0';
@@ -486,7 +486,7 @@ INSERT INTO pgdev.api_endpoint_fields (
     required_yn, field_order, description, sample_value, default_value, created_at, updated_at
 )
 SELECT v.id, 'RESPONSE', 'BODY', 'paymentMethodId', 'String',
-       'Y', 5, '결제 수단 식별자', 'tossPay', null, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+       'Y', 5, '寃곗젣 ?섎떒 ?앸퀎??, 'tossPay', null, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
 FROM pgdev.api_endpoint_versions v
 JOIN pgdev.api_definitions d ON d.id = v.api_definition_id
 WHERE d.api_code = 'PAYMENT_STATUS' AND v.version = 'v1.0.0';
@@ -496,7 +496,7 @@ INSERT INTO pgdev.api_endpoint_fields (
     required_yn, field_order, description, sample_value, default_value, created_at, updated_at
 )
 SELECT v.id, 'RESPONSE', 'BODY', 'paymentId', 'String',
-       'Y', 6, 'PG 거래 고유 키', 'PAYMENT_KEY_12345', null, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+       'Y', 6, 'PG 嫄곕옒 怨좎쑀 ??, 'PAYMENT_KEY_12345', null, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
 FROM pgdev.api_endpoint_versions v
 JOIN pgdev.api_definitions d ON d.id = v.api_definition_id
 WHERE d.api_code = 'PAYMENT_STATUS' AND v.version = 'v1.0.0';
@@ -506,7 +506,7 @@ INSERT INTO pgdev.api_endpoint_fields (
     required_yn, field_order, description, sample_value, default_value, created_at, updated_at
 )
 SELECT v.id, 'RESPONSE', 'BODY', 'createdAt', 'LocalDateTime',
-       'Y', 7, '결제 생성 시각', '2026-04-06T15:30:00', null, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+       'Y', 7, '寃곗젣 ?앹꽦 ?쒓컖', '2026-04-06T15:30:00', null, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
 FROM pgdev.api_endpoint_versions v
 JOIN pgdev.api_definitions d ON d.id = v.api_definition_id
 WHERE d.api_code = 'PAYMENT_STATUS' AND v.version = 'v1.0.0';
@@ -516,7 +516,8 @@ INSERT INTO pgdev.api_endpoint_fields (
     required_yn, field_order, description, sample_value, default_value, created_at, updated_at
 )
 SELECT v.id, 'RESPONSE', 'BODY', 'approvalAt', 'LocalDateTime',
-       'Y', 8, '결제 승인 시각', '2026-04-06T15:35:00', null, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+       'Y', 8, '寃곗젣 ?뱀씤 ?쒓컖', '2026-04-06T15:35:00', null, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
 FROM pgdev.api_endpoint_versions v
 JOIN pgdev.api_definitions d ON d.id = v.api_definition_id
 WHERE d.api_code = 'PAYMENT_STATUS' AND v.version = 'v1.0.0';
+

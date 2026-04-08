@@ -8,6 +8,7 @@
         <result property="httpMethod" column="http_method"/>
         <result property="endpoint" column="endpoint"/>
         <result property="version" column="version"/>
+        <result property="displayOrder" column="display_order"/>
         <result property="status" column="status"/>
         <result property="description" column="description"/>
         <result property="createdAt" column="created_at"/>
@@ -41,6 +42,7 @@
         <result property="version" column="version"/>
         <result property="endpoint" column="endpoint"/>
         <result property="httpMethod" column="http_method"/>
+        <result property="displayOrder" column="display_order"/>
         <result property="status" column="status"/>
         <result property="description" column="description"/>
         <result property="isCurrent" column="is_current"/>
@@ -49,25 +51,25 @@
     </resultMap>
 
     <select id="findAll" resultMap="apiEndpointResultMap">
-        SELECT id, name, http_method, endpoint, version, status, description, created_at, updated_at
+        SELECT id, name, http_method, endpoint, version, display_order, status, description, created_at, updated_at
         FROM pgdev.api_endpoints
-        ORDER BY created_at DESC
+        ORDER BY display_order ASC, created_at DESC
     </select>
 
     <select id="findById" parameterType="long" resultMap="apiEndpointResultMap">
-        SELECT id, name, http_method, endpoint, version, status, description, created_at, updated_at
+        SELECT id, name, http_method, endpoint, version, display_order, status, description, created_at, updated_at
         FROM pgdev.api_endpoints
         WHERE id = #{id}
     </select>
 
     <select id="findByEndpoint" parameterType="string" resultMap="apiEndpointResultMap">
-        SELECT id, name, http_method, endpoint, version, status, description, created_at, updated_at
+        SELECT id, name, http_method, endpoint, version, display_order, status, description, created_at, updated_at
         FROM pgdev.api_endpoints
         WHERE endpoint = #{endpoint}
     </select>
 
     <select id="findByNameAndVersion" resultMap="apiEndpointResultMap">
-        SELECT id, name, http_method, endpoint, version, status, description, created_at, updated_at
+        SELECT id, name, http_method, endpoint, version, display_order, status, description, created_at, updated_at
         FROM pgdev.api_endpoints
         WHERE name = #{name}
           AND version = #{version}
@@ -128,6 +130,7 @@
                version,
                endpoint,
                http_method,
+               display_order,
                status,
                description,
                is_current,
@@ -139,8 +142,8 @@
     </select>
 
     <insert id="insert" useGeneratedKeys="true" keyProperty="id">
-        INSERT INTO pgdev.api_endpoints (name, http_method, endpoint, version, status, description, created_at, updated_at)
-        VALUES (#{name}, #{httpMethod}, #{endpoint}, #{version}, #{status}, #{description}, #{createdAt}, #{updatedAt})
+        INSERT INTO pgdev.api_endpoints (name, http_method, endpoint, version, display_order, status, description, created_at, updated_at)
+        VALUES (#{name}, #{httpMethod}, #{endpoint}, #{version}, #{displayOrder}, #{status}, #{description}, #{createdAt}, #{updatedAt})
     </insert>
 
     <update id="update">
@@ -149,6 +152,7 @@
             http_method = #{httpMethod},
             endpoint = #{endpoint},
             version = #{version},
+            display_order = #{displayOrder},
             status = #{status},
             description = #{description},
             updated_at = #{updatedAt}
@@ -178,6 +182,7 @@
             version,
             endpoint,
             http_method,
+            display_order,
             status,
             description,
             is_current,
@@ -189,6 +194,7 @@
             #{version},
             #{endpoint},
             #{httpMethod},
+            #{displayOrder},
             #{status},
             #{description},
             #{isCurrent},
@@ -202,6 +208,7 @@
         SET version = #{version},
             endpoint = #{endpoint},
             http_method = #{httpMethod},
+            display_order = #{displayOrder},
             status = #{status},
             description = #{description},
             is_current = #{isCurrent},

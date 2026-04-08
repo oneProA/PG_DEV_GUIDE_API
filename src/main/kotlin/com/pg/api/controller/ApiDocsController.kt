@@ -45,6 +45,7 @@ class ApiDocsController(private val adminApiService: AdminApiService) {
         endpoint = api.endpoint,
         method = api.httpMethod,
         version = api.version,
+        displayOrder = api.displayOrder,
         status = api.status,
         lastModified = api.updatedAt.format(dateTimeFormatter),
         description = api.description
@@ -57,6 +58,7 @@ class ApiDocsController(private val adminApiService: AdminApiService) {
             endpoint = api.endpoint,
             method = api.httpMethod,
             version = api.version,
+            displayOrder = api.displayOrder,
             status = api.status,
             lastModified = api.updatedAt.format(dateTimeFormatter),
             description = api.description,

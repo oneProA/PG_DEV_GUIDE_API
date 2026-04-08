@@ -36,6 +36,7 @@ class AdminApiService(private val adminApiMapper: AdminApiMapper) {
         val timestamp = LocalDateTime.now()
         val newEndpoint = apiEndpoint.copy(
             version = resolveUniqueVersion(apiEndpoint.name, apiEndpoint.version),
+            displayOrder = if (apiEndpoint.displayOrder > 0) apiEndpoint.displayOrder else resolveNextDisplayOrder(),
             createdAt = timestamp,
             updatedAt = timestamp
         )
@@ -57,6 +58,7 @@ class AdminApiService(private val adminApiMapper: AdminApiMapper) {
         val updated = apiEndpoint.copy(
             id = id,
             version = resolveUniqueVersion(apiEndpoint.name, apiEndpoint.version, id),
+            displayOrder = if (apiEndpoint.displayOrder > 0) apiEndpoint.displayOrder else existing.displayOrder,
             createdAt = existing.createdAt,
             updatedAt = LocalDateTime.now(),
             status = apiEndpoint.status.ifBlank { existing.status }
@@ -117,6 +119,7 @@ class AdminApiService(private val adminApiMapper: AdminApiMapper) {
                 version = apiEndpoint.version,
                 endpoint = apiEndpoint.endpoint,
                 httpMethod = apiEndpoint.httpMethod,
+                displayOrder = apiEndpoint.displayOrder,
                 status = apiEndpoint.status,
                 description = apiEndpoint.description,
                 updatedAt = now
@@ -136,6 +139,7 @@ class AdminApiService(private val adminApiMapper: AdminApiMapper) {
                 version = apiEndpoint.version,
                 endpoint = apiEndpoint.endpoint,
                 httpMethod = apiEndpoint.httpMethod,
+                displayOrder = apiEndpoint.displayOrder,
                 status = apiEndpoint.status,
                 description = apiEndpoint.description,
                 createdAt = now,
@@ -193,6 +197,11 @@ class AdminApiService(private val adminApiMapper: AdminApiMapper) {
         }
 
         return candidateVersion
+    }
+
+    private fun resolveNextDisplayOrder(): Int {
+        val maxDisplayOrder = adminApiMapper.findAll().maxOfOrNull { it.displayOrder } ?: 0
+        return maxDisplayOrder + 1
     }
 
     private fun incrementVersion(version: String): String {
