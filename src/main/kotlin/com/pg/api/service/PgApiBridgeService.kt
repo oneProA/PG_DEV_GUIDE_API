@@ -45,6 +45,7 @@ class PgApiBridgeService(
             .toUri()
 
         val response = exchangeForMap(uri.toString())
+        val pgApiBaseUrl = resolveBaseUrl()
 
         return GuidePaymentRequestResponse(
             orderId = response["orderId"]?.toString().orEmpty(),
@@ -53,7 +54,7 @@ class PgApiBridgeService(
             status = "READY",
             amount = resolvedRequest.amount,
             approvedAt = response["approvedAt"]?.toString(),
-            nextRedirectPcUrl = response["next_redirect_pc_url"]?.toString(),
+            nextRedirectPcUrl = resolveRedirectUrl(pgApiBaseUrl, response["next_redirect_pc_url"]?.toString()),
         )
     }
 
@@ -119,6 +120,18 @@ class PgApiBridgeService(
             localBaseUrl
         } else {
             cloudBaseUrl
+        }
+    }
+
+    private fun resolveRedirectUrl(baseUrl: String, redirectUrl: String?): String? {
+        if (redirectUrl.isNullOrBlank()) {
+            return null
+        }
+
+        return if (redirectUrl.startsWith("http://") || redirectUrl.startsWith("https://")) {
+            redirectUrl
+        } else {
+            "${baseUrl.removeSuffix("/")}/${redirectUrl.removePrefix("/")}"
         }
     }
 }
