@@ -16,18 +16,17 @@ class PgApiBridgeService(
     @Value("\${integration.pg-api.local-base-url}") private val localBaseUrl: String,
     @Value("\${integration.pg-api.cloud-base-url}") private val cloudBaseUrl: String,
     @Value("\${integration.pg-api.default-payment-method-id}") private val defaultPaymentMethodId: String,
-    @Value("\${integration.pg-api.default-approval-url}") private val defaultApprovalUrl: String,
-    @Value("\${integration.pg-api.default-cancel-url}") private val defaultCancelUrl: String,
-    @Value("\${integration.pg-api.default-fail-url}") private val defaultFailUrl: String,
+    @Value("\${integration.guide-api.local-base-url}") private val localGuideApiBaseUrl: String,
+    @Value("\${integration.guide-api.cloud-base-url}") private val cloudGuideApiBaseUrl: String,
 ) {
     private val restClient = RestClient.create()
 
     fun requestPayment(request: GuidePaymentRequest): GuidePaymentRequestResponse {
         val resolvedRequest = request.copy(
             paymentMethodId = request.paymentMethodId ?: defaultPaymentMethodId,
-            approvalUrl = request.approvalUrl ?: defaultApprovalUrl,
-            cancelUrl = request.cancelUrl ?: defaultCancelUrl,
-            failUrl = request.failUrl ?: defaultFailUrl,
+            approvalUrl = request.approvalUrl ?: resolveGuideApiCallbackUrl("success"),
+            cancelUrl = request.cancelUrl ?: resolveGuideApiCallbackUrl("cancel"),
+            failUrl = request.failUrl ?: resolveGuideApiCallbackUrl("fail"),
         )
 
         val uri = UriComponentsBuilder
@@ -121,6 +120,18 @@ class PgApiBridgeService(
         } else {
             cloudBaseUrl
         }
+    }
+
+    private fun resolveGuideApiBaseUrl(): String {
+        return if (System.getenv("K_SERVICE").isNullOrBlank()) {
+            localGuideApiBaseUrl
+        } else {
+            cloudGuideApiBaseUrl
+        }
+    }
+
+    private fun resolveGuideApiCallbackUrl(resultType: String): String {
+        return "${resolveGuideApiBaseUrl().removeSuffix("/")}/playground/$resultType"
     }
 
     private fun resolveRedirectUrl(baseUrl: String, redirectUrl: String?): String? {

@@ -39,6 +39,9 @@ integration:
     local-base-url: http://localhost:8081
     cloud-base-url: https://pg-api-199385196072.us-central1.run.app
     default-payment-method-id: tossPay
-    default-approval-url: https://pg-dev-guide-view-six.vercel.app/playground/success
-    default-cancel-url: https://pg-dev-guide-view-six.vercel.app/playground/cancel
-    default-fail-url: https://pg-dev-guide-view-six.vercel.app/playground/fail
+  guide-api:
+    local-base-url: http://localhost:8080
+    cloud-base-url: https://pg-dev-guide-api-692488808235.us-central1.run.app
+  guide-view:
+    local-base-url: http://localhost:5173
+    cloud-base-url: https://pg-dev-guide-view-six.vercel.app
