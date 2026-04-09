@@ -14,7 +14,7 @@ class CorsConfig : WebMvcConfigurer {
                 "https://pg-dev-guide-view.vercel.app/",
                 "https://pg-dev-guide-view-six.vercel.app"
             )
-            .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
+            .allowedMethods("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")
             .allowedHeaders("*")
     }
 }

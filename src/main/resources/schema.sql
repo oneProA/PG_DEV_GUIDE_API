@@ -542,3 +542,83 @@ FROM pgdev.api_endpoint_versions v
 JOIN pgdev.api_definitions d ON d.id = v.api_definition_id
 WHERE d.api_code = 'PAYMENT_STATUS' AND v.version = 'v1.0.0';
 
+-- Support inquiry master table
+CREATE TABLE IF NOT EXISTS pgdev.support_inquiries (
+    inquiry_id BIGSERIAL PRIMARY KEY,
+    inquiry_no VARCHAR(30) UNIQUE NOT NULL,
+    user_id BIGINT NOT NULL REFERENCES pgdev.users(user_id) ON DELETE RESTRICT,
+    category_code VARCHAR(30) NOT NULL,
+    title VARCHAR(200) NOT NULL,
+    content_text TEXT NOT NULL,
+    content_html TEXT,
+    status VARCHAR(20) NOT NULL DEFAULT 'RECEIVED',
+    priority VARCHAR(20) NOT NULL DEFAULT 'NORMAL',
+    answer_content_text TEXT,
+    answer_content_html TEXT,
+    answered_by_user_id BIGINT REFERENCES pgdev.users(user_id) ON DELETE SET NULL,
+    answered_at TIMESTAMP,
+    has_attachments CHAR(1) NOT NULL DEFAULT 'N',
+    view_count INT NOT NULL DEFAULT 0,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    closed_at TIMESTAMP,
+    CONSTRAINT chk_support_inquiries_category
+        CHECK (category_code IN ('PAYMENT_ERROR', 'API_INTEGRATION', 'ACCOUNT_PERMISSION', 'ETC')),
+    CONSTRAINT chk_support_inquiries_status
+        CHECK (status IN ('RECEIVED', 'IN_PROGRESS', 'ANSWERED')),
+    CONSTRAINT chk_support_inquiries_priority
+        CHECK (priority IN ('LOW', 'NORMAL', 'HIGH', 'URGENT')),
+    CONSTRAINT chk_support_inquiries_has_attachments
+        CHECK (has_attachments IN ('Y', 'N'))
+);
+
+CREATE INDEX IF NOT EXISTS idx_support_inquiries_user_id
+    ON pgdev.support_inquiries(user_id);
+
+CREATE INDEX IF NOT EXISTS idx_support_inquiries_status_created_at
+    ON pgdev.support_inquiries(status, created_at DESC);
+
+CREATE INDEX IF NOT EXISTS idx_support_inquiries_category_created_at
+    ON pgdev.support_inquiries(category_code, created_at DESC);
+
+CREATE INDEX IF NOT EXISTS idx_support_inquiries_created_at_inquiry_id
+    ON pgdev.support_inquiries(created_at DESC, inquiry_id DESC);
+
+CREATE INDEX IF NOT EXISTS idx_support_inquiries_status_category_created_at
+    ON pgdev.support_inquiries(status, category_code, created_at DESC, inquiry_id DESC);
+
+-- Support inquiry files (for inquiry/answer attachments and inline images)
+CREATE TABLE IF NOT EXISTS pgdev.support_inquiry_files (
+    file_id BIGSERIAL PRIMARY KEY,
+    inquiry_id BIGINT NOT NULL REFERENCES pgdev.support_inquiries(inquiry_id) ON DELETE CASCADE,
+    owner_type VARCHAR(20) NOT NULL,
+    file_role VARCHAR(20) NOT NULL,
+    original_file_name VARCHAR(255) NOT NULL,
+    stored_file_name VARCHAR(255) NOT NULL,
+    file_url TEXT NOT NULL,
+    mime_type VARCHAR(100) NOT NULL,
+    file_size_bytes BIGINT NOT NULL,
+    inline_key VARCHAR(100),
+    sort_order INT NOT NULL DEFAULT 1,
+    uploaded_by_user_id BIGINT NOT NULL REFERENCES pgdev.users(user_id) ON DELETE RESTRICT,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT chk_support_inquiry_files_owner_type
+        CHECK (owner_type IN ('INQUIRY', 'ANSWER')),
+    CONSTRAINT chk_support_inquiry_files_role
+        CHECK (file_role IN ('ATTACHMENT', 'INLINE_IMAGE')),
+    CONSTRAINT chk_support_inquiry_files_size_positive
+        CHECK (file_size_bytes > 0)
+);
+
+CREATE INDEX IF NOT EXISTS idx_support_inquiry_files_inquiry_id
+    ON pgdev.support_inquiry_files(inquiry_id);
+
+CREATE INDEX IF NOT EXISTS idx_support_inquiry_files_owner_type
+    ON pgdev.support_inquiry_files(owner_type);
+
+CREATE INDEX IF NOT EXISTS idx_support_inquiry_files_role
+    ON pgdev.support_inquiry_files(file_role);
+
+CREATE INDEX IF NOT EXISTS idx_support_inquiry_files_inline_key
+    ON pgdev.support_inquiry_files(inline_key);
+

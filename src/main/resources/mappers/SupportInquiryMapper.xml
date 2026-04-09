@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.pg.api.repository.SupportInquiryMapper">
+
+    <resultMap id="supportInquirySummaryResultMap" type="com.pg.api.domain.SupportInquirySummary">
+        <id property="inquiryId" column="inquiry_id"/>
+        <result property="inquiryNo" column="inquiry_no"/>
+        <result property="categoryCode" column="category_code"/>
+        <result property="title" column="title"/>
+        <result property="status" column="status"/>
+        <result property="createdAt" column="created_at"/>
+    </resultMap>
+
+    <insert id="insertInquiry" parameterType="com.pg.api.domain.SupportInquiryCreateCommand" useGeneratedKeys="true" keyProperty="inquiryId">
+        INSERT INTO pgdev.support_inquiries (
+            inquiry_no,
+            user_id,
+            category_code,
+            title,
+            content_text,
+            status,
+            priority,
+            has_attachments,
+            view_count,
+            created_at,
+            updated_at
+        ) VALUES (
+            #{inquiryNo},
+            #{userId},
+            #{categoryCode},
+            #{title},
+            #{contentText},
+            #{status},
+            #{priority},
+            #{hasAttachments},
+            #{viewCount},
+            #{createdAt},
+            #{updatedAt}
+        )
+    </insert>
+
+    <insert id="insertInquiryFile" parameterType="com.pg.api.domain.SupportInquiryFileCreateCommand" useGeneratedKeys="true" keyProperty="fileId">
+        INSERT INTO pgdev.support_inquiry_files (
+            inquiry_id,
+            owner_type,
+            file_role,
+            original_file_name,
+            stored_file_name,
+            file_url,
+            mime_type,
+            file_size_bytes,
+            inline_key,
+            sort_order,
+            uploaded_by_user_id,
+            created_at
+        ) VALUES (
+            #{inquiryId},
+            #{ownerType},
+            #{fileRole},
+            #{originalFileName},
+            #{storedFileName},
+            #{fileUrl},
+            #{mimeType},
+            #{fileSizeBytes},
+            #{inlineKey},
+            #{sortOrder},
+            #{uploadedByUserId},
+            #{createdAt}
+        )
+    </insert>
+
+    <select id="findRecentByUserId" resultMap="supportInquirySummaryResultMap">
+        SELECT
+            inquiry_id,
+            inquiry_no,
+            category_code,
+            title,
+            status,
+            created_at
+        FROM pgdev.support_inquiries
+        WHERE user_id = #{userId}
+        ORDER BY created_at DESC, inquiry_id DESC
+        LIMIT #{limit}
+    </select>
+
+</mapper>

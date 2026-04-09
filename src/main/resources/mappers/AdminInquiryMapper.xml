@@ -1,0 +1,205 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.pg.api.repository.AdminInquiryMapper">
+
+    <resultMap id="adminInquiryResultMap" type="com.pg.api.domain.AdminInquiry">
+        <id property="inquiryId" column="inquiry_id"/>
+        <result property="inquiryNo" column="inquiry_no"/>
+        <result property="userId" column="user_id"/>
+        <result property="authorName" column="author_name"/>
+        <result property="authorUsername" column="author_username"/>
+        <result property="categoryCode" column="category_code"/>
+        <result property="title" column="title"/>
+        <result property="contentText" column="content_text"/>
+        <result property="answerContentText" column="answer_content_text"/>
+        <result property="status" column="status"/>
+        <result property="hasAttachments" column="has_attachments"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+        <result property="answeredAt" column="answered_at"/>
+    </resultMap>
+
+    <resultMap id="adminInquiryFileResultMap" type="com.pg.api.domain.AdminInquiryFile">
+        <id property="fileId" column="file_id"/>
+        <result property="inquiryId" column="inquiry_id"/>
+        <result property="ownerType" column="owner_type"/>
+        <result property="fileRole" column="file_role"/>
+        <result property="originalFileName" column="original_file_name"/>
+        <result property="fileUrl" column="file_url"/>
+        <result property="mimeType" column="mime_type"/>
+        <result property="fileSizeBytes" column="file_size_bytes"/>
+        <result property="createdAt" column="created_at"/>
+    </resultMap>
+
+    <sql id="inquiryFilters">
+        <where>
+            AND si.created_at <![CDATA[>=]]> #{fromDateTime}
+            AND si.created_at <![CDATA[<]]> #{toDateTimeExclusive}
+            <if test="status != null and status != ''">
+                AND si.status = #{status}
+            </if>
+            <if test="categoryCode != null and categoryCode != ''">
+                AND si.category_code = #{categoryCode}
+            </if>
+            <if test="keyword != null and keyword != ''">
+                AND (
+                    LOWER(si.title) LIKE CONCAT('%', LOWER(#{keyword}), '%')
+                    OR LOWER(si.content_text) LIKE CONCAT('%', LOWER(#{keyword}), '%')
+                    OR LOWER(COALESCE(u.name, u.username)) LIKE CONCAT('%', LOWER(#{keyword}), '%')
+                    OR LOWER(u.username) LIKE CONCAT('%', LOWER(#{keyword}), '%')
+                    OR LOWER(u.email) LIKE CONCAT('%', LOWER(#{keyword}), '%')
+                    OR LOWER(si.inquiry_no) LIKE CONCAT('%', LOWER(#{keyword}), '%')
+                )
+            </if>
+        </where>
+    </sql>
+
+    <select id="findPage" resultMap="adminInquiryResultMap">
+        SELECT
+            si.inquiry_id,
+            si.inquiry_no,
+            si.user_id,
+            COALESCE(u.name, u.username) AS author_name,
+            u.username AS author_username,
+            si.category_code,
+            si.title,
+            si.content_text,
+            si.answer_content_text,
+            si.status,
+            si.has_attachments,
+            si.created_at,
+            si.updated_at,
+            si.answered_at
+        FROM pgdev.support_inquiries si
+        JOIN pgdev.users u ON u.user_id = si.user_id
+        <include refid="inquiryFilters" />
+        <choose>
+            <when test="sortDirection == 'ASC'">
+                ORDER BY si.created_at ASC, si.inquiry_id ASC
+            </when>
+            <otherwise>
+                ORDER BY si.created_at DESC, si.inquiry_id DESC
+            </otherwise>
+        </choose>
+        LIMIT #{limit}
+        OFFSET #{offset}
+    </select>
+
+    <select id="countAll" resultType="long">
+        SELECT COUNT(*)
+        FROM pgdev.support_inquiries si
+        JOIN pgdev.users u ON u.user_id = si.user_id
+        <include refid="inquiryFilters" />
+    </select>
+
+    <select id="findById" resultMap="adminInquiryResultMap">
+        SELECT
+            si.inquiry_id,
+            si.inquiry_no,
+            si.user_id,
+            COALESCE(u.name, u.username) AS author_name,
+            u.username AS author_username,
+            si.category_code,
+            si.title,
+            si.content_text,
+            si.answer_content_text,
+            si.status,
+            si.has_attachments,
+            si.created_at,
+            si.updated_at,
+            si.answered_at
+        FROM pgdev.support_inquiries si
+        JOIN pgdev.users u ON u.user_id = si.user_id
+        WHERE si.inquiry_id = #{id}
+    </select>
+
+    <select id="findFilesByInquiryId" resultMap="adminInquiryFileResultMap">
+        SELECT
+            file_id,
+            inquiry_id,
+            owner_type,
+            file_role,
+            original_file_name,
+            file_url,
+            mime_type,
+            file_size_bytes,
+            created_at
+        FROM pgdev.support_inquiry_files
+        WHERE inquiry_id = #{inquiryId}
+        ORDER BY owner_type ASC, sort_order ASC, file_id ASC
+    </select>
+
+    <update id="updateStatus">
+        UPDATE pgdev.support_inquiries
+        SET
+            status = #{status},
+            updated_at = #{updatedAt},
+            answered_at = CASE
+                WHEN #{status} = 'ANSWERED' THEN COALESCE(answered_at, #{updatedAt})
+                ELSE answered_at
+            END
+        WHERE inquiry_id = #{id}
+    </update>
+
+    <update id="updateAnswerAndStatus">
+        UPDATE pgdev.support_inquiries
+        SET
+            answer_content_text = #{answerContentText},
+            status = #{status},
+            updated_at = #{updatedAt},
+            answered_at = CASE
+                WHEN #{status} = 'ANSWERED' THEN #{updatedAt}
+                ELSE answered_at
+            END
+        WHERE inquiry_id = #{id}
+    </update>
+
+    <select id="countTodayReceived" resultType="long">
+        SELECT COUNT(*)
+        FROM pgdev.support_inquiries si
+        WHERE si.status = 'RECEIVED'
+          AND si.created_at <![CDATA[>=]]> #{fromDateTime}
+          AND si.created_at <![CDATA[<]]> #{toDateTimeExclusive}
+    </select>
+
+    <select id="countUnhandled" resultType="long">
+        SELECT COUNT(*)
+        FROM pgdev.support_inquiries si
+        WHERE si.status IN ('RECEIVED', 'IN_PROGRESS')
+    </select>
+
+    <select id="findAnsweredResponseTimePairsInRange" resultType="com.pg.api.domain.AdminInquiryResponseTimePair">
+        SELECT
+            si.created_at AS created_at,
+            si.answered_at AS answered_at
+        FROM pgdev.support_inquiries si
+        WHERE si.status = 'ANSWERED'
+          AND si.answered_at IS NOT NULL
+          AND si.answered_at <![CDATA[>=]]> #{fromDateTime}
+          AND si.answered_at <![CDATA[<]]> #{toDateTimeExclusive}
+    </select>
+
+    <select id="findRecentUnhandled" resultMap="adminInquiryResultMap">
+        SELECT
+            si.inquiry_id,
+            si.inquiry_no,
+            si.user_id,
+            COALESCE(u.name, u.username) AS author_name,
+            u.username AS author_username,
+            si.category_code,
+            si.title,
+            si.content_text,
+            si.answer_content_text,
+            si.status,
+            si.has_attachments,
+            si.created_at,
+            si.updated_at,
+            si.answered_at
+        FROM pgdev.support_inquiries si
+        JOIN pgdev.users u ON u.user_id = si.user_id
+        WHERE si.status IN ('RECEIVED', 'IN_PROGRESS')
+        ORDER BY si.created_at DESC, si.inquiry_id DESC
+        LIMIT #{limit}
+    </select>
+
+</mapper>
