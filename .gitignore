@@ -11,6 +11,8 @@ out/
 *.iws
 *.ipr
 .vscode/
+!.vscode/
+!.vscode/settings.json
 .project
 .classpath
 .settings/

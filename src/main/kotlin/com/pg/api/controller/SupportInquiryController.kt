@@ -2,10 +2,13 @@ package com.pg.api.controller
 
 import com.pg.api.dto.ApiResponse
 import com.pg.api.dto.CreateSupportInquiryResponse
+import com.pg.api.dto.SupportInquiryDetailResponse
+import com.pg.api.dto.SupportInquiryFileResponse
 import com.pg.api.dto.SupportInquirySummaryResponse
 import com.pg.api.service.SupportInquiryService
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
@@ -40,6 +43,44 @@ class SupportInquiryController(
             ResponseEntity.ok(ApiResponse("SUCCESS", items))
         } catch (e: IllegalArgumentException) {
             ResponseEntity.status(400).body(ApiResponse("ERROR", null, e.message))
+        }
+    }
+
+    @GetMapping("/{id:\\d+}")
+    fun getInquiryDetail(
+        @PathVariable id: Long,
+        @RequestParam username: String,
+    ): ResponseEntity<ApiResponse<SupportInquiryDetailResponse?>> {
+        return try {
+            val (inquiry, files) = supportInquiryService.getInquiryDetail(username = username, inquiryId = id)
+            val payload = SupportInquiryDetailResponse(
+                inquiryId = inquiry.inquiryId.toString(),
+                inquiryNo = inquiry.inquiryNo,
+                categoryCode = inquiry.categoryCode,
+                title = inquiry.title,
+                contentText = inquiry.contentText,
+                answerContentText = inquiry.answerContentText,
+                status = inquiry.status,
+                createdAt = inquiry.createdAt.format(dateTimeFormatter),
+                updatedAt = inquiry.updatedAt.format(dateTimeFormatter),
+                answeredAt = inquiry.answeredAt?.format(dateTimeFormatter),
+                files = files.map {
+                    SupportInquiryFileResponse(
+                        fileId = it.fileId.toString(),
+                        inquiryId = it.inquiryId.toString(),
+                        ownerType = it.ownerType,
+                        fileRole = it.fileRole,
+                        originalFileName = it.originalFileName,
+                        fileUrl = it.fileUrl,
+                        mimeType = it.mimeType,
+                        fileSizeBytes = it.fileSizeBytes,
+                        createdAt = it.createdAt.format(dateTimeFormatter),
+                    )
+                },
+            )
+            ResponseEntity.ok(ApiResponse("SUCCESS", payload))
+        } catch (e: IllegalArgumentException) {
+            ResponseEntity.status(404).body(ApiResponse("ERROR", null, e.message))
         }
     }
 

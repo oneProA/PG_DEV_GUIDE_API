@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.multipart.MultipartFile
 import java.time.format.DateTimeFormatter
 import kotlin.math.ceil
 
@@ -120,6 +121,30 @@ class AdminInquiryController(private val adminInquiryService: AdminInquiryServic
             ResponseEntity.ok(ApiResponse("SUCCESS", updated.toEntryResponse()))
         } catch (e: IllegalArgumentException) {
             ResponseEntity.status(400).body(ApiResponse("ERROR", null, e.message))
+        }
+    }
+
+    @PatchMapping("/{id}/answer", consumes = ["multipart/form-data"])
+    fun updateInquiryAnswerMultipart(
+        @PathVariable id: Long,
+        @RequestParam answerContentText: String,
+        @RequestParam status: String,
+        @RequestParam(required = false) files: List<MultipartFile>?,
+        @RequestParam(required = false) fileKeys: List<String>?,
+    ): ResponseEntity<ApiResponse<AdminInquiryEntryResponse?>> {
+        return try {
+            val updated = adminInquiryService.updateInquiryAnswer(
+                id = id,
+                answerContentText = answerContentText,
+                status = status,
+                files = files ?: emptyList(),
+                fileKeys = fileKeys ?: emptyList(),
+            )
+            ResponseEntity.ok(ApiResponse("SUCCESS", updated.toEntryResponse()))
+        } catch (e: IllegalArgumentException) {
+            ResponseEntity.status(400).body(ApiResponse("ERROR", null, e.message))
+        } catch (e: IllegalStateException) {
+            ResponseEntity.status(500).body(ApiResponse("ERROR", null, e.message))
         }
     }
 

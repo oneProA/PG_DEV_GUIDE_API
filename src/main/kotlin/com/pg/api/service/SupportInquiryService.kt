@@ -1,7 +1,9 @@
 ﻿package com.pg.api.service
 
 import com.pg.api.domain.SupportInquiryCreateCommand
+import com.pg.api.domain.SupportInquiryDetail
 import com.pg.api.domain.SupportInquiryFileCreateCommand
+import com.pg.api.domain.SupportInquiryFileSummary
 import com.pg.api.domain.SupportInquirySummary
 import com.pg.api.dto.CreateSupportInquiryResponse
 import com.pg.api.repository.SupportInquiryMapper
@@ -35,6 +37,14 @@ class SupportInquiryService(
     fun getMyInquiries(username: String, limit: Int = 20): List<SupportInquirySummary> {
         val userId = resolveUserId(username)
         return supportInquiryMapper.findRecentByUserId(userId = userId, limit = limit.coerceIn(1, 100))
+    }
+
+    fun getInquiryDetail(username: String, inquiryId: Long): Pair<SupportInquiryDetail, List<SupportInquiryFileSummary>> {
+        val userId = resolveUserId(username)
+        val inquiry = supportInquiryMapper.findDetailByIdAndUserId(inquiryId = inquiryId, userId = userId)
+            ?: throw IllegalArgumentException("Inquiry not found: $inquiryId")
+        val files = supportInquiryMapper.findFilesByInquiryId(inquiryId)
+        return inquiry to files
     }
 
     @Transactional

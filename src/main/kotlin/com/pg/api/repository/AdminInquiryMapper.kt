@@ -3,6 +3,7 @@ package com.pg.api.repository
 import com.pg.api.domain.AdminInquiry
 import com.pg.api.domain.AdminInquiryFile
 import com.pg.api.domain.AdminInquiryResponseTimePair
+import com.pg.api.domain.SupportInquiryFileCreateCommand
 import org.apache.ibatis.annotations.Mapper
 import org.apache.ibatis.annotations.Param
 import java.time.LocalDateTime
@@ -44,6 +45,8 @@ interface AdminInquiryMapper {
         @Param("status") status: String,
         @Param("updatedAt") updatedAt: LocalDateTime,
     ): Int
+
+    fun insertInquiryFile(command: SupportInquiryFileCreateCommand): Int
 
     fun countTodayReceived(
         @Param("fromDateTime") fromDateTime: LocalDateTime,
